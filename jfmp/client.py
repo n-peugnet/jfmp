@@ -2,67 +2,67 @@ import socket
 import json
 import os
 from getpass import getpass
+from typing import List
 
-from jellyfin_apiclient_python import Jellyfin
+from jellyfin_apiclient_python import JellyfinClient
 from jellyfin_apiclient_python.connection_manager import CONNECTION_STATE
 
-from jfmp import conffile
-from jfmp.constants import CLIENT_NAME, CLIENT_VERSION, COMMAND_NAME
+from .file import conf_file
+from .constants import CLIENT_NAME, CLIENT_VERSION, COMMAND_NAME
+from .data import Song, Album
 
-credentials_location = conffile.get(COMMAND_NAME,'cred.json')
+credentials_location = conf_file('cred.json')
 
-class Client(object):
+def ensure_logged_in():
+
+    def decorator(func):
+        def wrapper(self, *args, **kwargs):
+            if self.logged_in is False:
+                self.connect()
+            return func(self, *args, **kwargs)
+        return wrapper
+
+    return decorator
+
+class Client(JellyfinClient):
     def __init__(self):
-        conn = Jellyfin(None)
-        conn.config.data['app.default'] = True
-        conn.config.app(CLIENT_NAME, CLIENT_VERSION, socket.gethostname(), f'{COMMAND_NAME}@{socket.gethostname()}')
-        conn.config.data['http.user_agent'] = f'{COMMAND_NAME}/{CLIENT_VERSION}'
-        conn.config.data['auth.ssl'] = True
+        super().__init__()
+        self.config.data['app.default'] = True
+        self.config.app(CLIENT_NAME, CLIENT_VERSION, socket.gethostname(), f'{COMMAND_NAME}@{socket.gethostname()}')
+        self.config.data['http.user_agent'] = f'{COMMAND_NAME}/{CLIENT_VERSION}'
+        self.config.data['auth.ssl'] = True
 
-        self.conn = conn
-        self.credentials = None
+    def connect(self) -> bool:
+        credentials = self._load_credentials()
+        if credentials is None:
+            return False
+        state = self.authenticate(credentials)
+        if state['State'] != CONNECTION_STATE['SignedIn']:
+            return False
+        # self.callback = event
+        # self.callback_ws = event
+        self.start(websocket=True)
+        return True
 
-    def connect(self):
-        is_logged_in = False
-        if not self.load_credentials():
-            while not is_logged_in:
-                host = input("Server URL: ")
-                username = input("Username: ")
-                password = getpass("Password: ")
-                self.conn.auth.connect_to_address(host)
-                self.conn.auth.login(host, username, password)
-                state = self.conn.auth.connect()
-                is_logged_in = state['State'] == CONNECTION_STATE['SignedIn']
-                if is_logged_in:
-                    credentials = self.conn.auth.credentials.get_credentials()
-                    with open(credentials_location, "w") as cf:
-                        json.dump(credentials, cf)
-                    self.conn.authenticate(credentials)
-        else:
-            state = self.conn.authenticate(self.credentials)
-            if state['State'] == CONNECTION_STATE['SignedIn']:
-                is_logged_in = True
+    def log_in(self, host: str, username: str, password: str) -> bool:
+        self.auth.connect_to_address(host)
+        self.auth.login(host, username, password)
+        state = self.auth.connect()
+        if state['State'] == CONNECTION_STATE['SignedIn']:
+            self._save_credentials(self.auth.credentials.get_credentials())
+            return self.connect()
+        return False
 
-        def event(event_name, data):
-            self.callback(conn, event_name, data)
-
-        self.conn.callback = event
-        self.conn.callback_ws = event
-        self.conn.start(websocket=True)
-
-        print(self.conn.jellyfin.get_user())
-        return is_logged_in
-
-    def close(self):
-        self.conn.close()
-
-    def save_credentials(self):
+    def _save_credentials(self, credentials):
         with open(credentials_location, "w") as cf:
-            json.dump(self.credentials, cf)
+            json.dump(credentials, cf)
 
-    def load_credentials(self):
+    def _load_credentials(self):
         if os.path.exists(credentials_location):
             with open(credentials_location) as cf:
-                self.credentials = json.load(cf)
-            return True
-        return False
+                return json.load(cf)
+        return None
+
+    # @ensure_logged_in()
+    def get_latest_albums(self) -> List[Album] :
+        return [Album(a) for a in self.jellyfin.get_recently_added('Audio')]

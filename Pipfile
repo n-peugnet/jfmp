@@ -8,6 +8,7 @@ verify_ssl = true
 [packages]
 jellyfin-apiclient-python = "==1.*"
 musicplayer = {git = "https://github.com/n-peugnet/music-player-core.git",ref = "test-branch"}
+appdirs = "*"
 
 [requires]
 python_version = "3.6"
