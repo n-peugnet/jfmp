@@ -57,6 +57,8 @@ class App(object):
             win = self.connection_window(root)
         else:
             win = self.player_window(root)
+        albums = self.client.get_latest_albums()
+        songs = self.client.get_album_songs(albums[0])
         root.mainloop()
         self.client.stop()
 

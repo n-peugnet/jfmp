@@ -13,6 +13,7 @@ from .data import Song, Album
 
 credentials_location = conf_file('cred.json')
 
+
 def ensure_logged_in():
 
     def decorator(func):
@@ -24,11 +25,16 @@ def ensure_logged_in():
 
     return decorator
 
+
 class Client(JellyfinClient):
     def __init__(self):
         super().__init__()
         self.config.data['app.default'] = True
-        self.config.app(CLIENT_NAME, CLIENT_VERSION, socket.gethostname(), f'{COMMAND_NAME}@{socket.gethostname()}')
+        self.config.app(
+            CLIENT_NAME,
+            CLIENT_VERSION,
+            socket.gethostname(),
+            f'{COMMAND_NAME}@{socket.gethostname()}')
         self.config.data['http.user_agent'] = f'{COMMAND_NAME}/{CLIENT_VERSION}'
         self.config.data['auth.ssl'] = True
 
@@ -64,5 +70,12 @@ class Client(JellyfinClient):
         return None
 
     # @ensure_logged_in()
-    def get_latest_albums(self) -> List[Album] :
+    def get_latest_albums(self) -> List[Album]:
         return [Album(a) for a in self.jellyfin.get_recently_added('Audio')]
+
+    def get_album_songs(self, album: Album) -> List[Song]:
+        response = self.jellyfin.user_items(params={
+            'ParentId': album.get_id(),
+            'IncludeItemTypes': 'Audio'
+        })
+        return [Song(i) for i in response['Items']]
