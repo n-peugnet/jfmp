@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "ffd39c8a26c611da179f764c12d445c2e4ae0f90b32710a307b7d8bc70da74ff"
+            "sha256": "ab0b841c82b8e00f1416cb7daef19ebb954e431b7be4547b8dcdc16003b1a121"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -47,15 +47,27 @@
         },
         "jellyfin-apiclient-python": {
             "hashes": [
-                "sha256:35324b23fdd66f87d7c37d3ca6cc43527c360fb1105b28d79a91ec83b9d023ce",
-                "sha256:d13ce7db2aea7d823eb80027763111d65c2a866fd3e58c369cc0955122b2cbec"
+                "sha256:64054ce3bd47b58328ef0034215bd61fe860b405182c5eaa426d4cf78f6bf0ee",
+                "sha256:c9937dd7c45b4133f3dd64320ca3c0eabb0d2d32cd05e76f94dd6c8706dec119"
             ],
             "index": "pypi",
-            "version": "==1.0.0"
+            "version": "==1.2.0"
         },
         "musicplayer": {
             "git": "https://github.com/n-peugnet/music-player-core.git",
             "ref": "2b5b524dd86e7685853197230cd85c1af82bd84c"
+        },
+        "pyside2": {
+            "hashes": [
+                "sha256:11bba54a62bcd9d7879d3e74cc54c0054c8c6dcdf011ecee9b47c5229cbd7af9",
+                "sha256:578b727a5a254cfd509ea2f1fa31779f217a2a1d765c770727662dac950d60eb",
+                "sha256:72feeb655958791383085bcb3154f6b3e193c1d66b6aa771c4244a6cafd62b7e",
+                "sha256:77474e11c0bb3efa2d7e8506fe0f36049585ba911b8242e070b5f8978e5ba6f7",
+                "sha256:c9f59e8c49a9a3b0cca04d8468becd8a562eb9ad0ac1d4d9a8622d2dfa3ce4c9",
+                "sha256:ce43f98333443242cd3fe976d72fcb3acf6bb7fa40dd5949e59947a501d5dd72"
+            ],
+            "index": "pypi",
+            "version": "==5.14.0"
         },
         "requests": {
             "hashes": [
@@ -63,6 +75,17 @@
                 "sha256:9cf5292fcd0f598c671cfc1e0d7d1a7f13bb8085e9a590f48c010551dc6c4b31"
             ],
             "version": "==2.22.0"
+        },
+        "shiboken2": {
+            "hashes": [
+                "sha256:101fc366798f88cbff13586907f3755bebbd9304e66626fb6b0f6b28e0c9a5d2",
+                "sha256:47c7c2652f578b37588e8b6daff3a852b3c88ae0f83be13886e4a74859e81763",
+                "sha256:4f138656fc755399776062c89492d61f887d4e5fe7c78cded73917e80afcf2f5",
+                "sha256:676fef81e4d95b02816fde7359c1f2604efa3edd34b05ab0da42c57c7555f7d7",
+                "sha256:a88267c7cc17501effc6b1b36d85e7ab28173af939b975ea42716ed12493b478",
+                "sha256:ab3ba84784c9641a11a21a8c64d494fa8b57be25e081e77f76747d543699f03c"
+            ],
+            "version": "==5.14.0"
         },
         "six": {
             "hashes": [
@@ -73,10 +96,10 @@
         },
         "urllib3": {
             "hashes": [
-                "sha256:a8a318824cc77d1fd4b2bec2ded92646630d7fe8619497b142c84a9e6f5a7293",
-                "sha256:f3c5fd51747d450d4dcf6f923c81f78f811aab8205fda64b0aba34a4e48b0745"
+                "sha256:2f3db8b19923a873b3e5256dc9c2dedfa883e33d87c690d9c7913e1f40673cdc",
+                "sha256:87716c2d2a7121198ebcb7ce7cccf6ce5e9ba539041cfbaeecfb641dc0bf6acc"
             ],
-            "version": "==1.25.7"
+            "version": "==1.25.8"
         },
         "websocket-client": {
             "hashes": [

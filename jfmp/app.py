@@ -7,112 +7,103 @@ import sys
 import os
 import fnmatch
 import pprint
-import tkinter as tk
 from functools import partial
 
-import musicplayer
+from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QDialog, QLineEdit, QPushButton, QVBoxLayout, QWidget
+from PySide2.QtQuick import QQuickView
+from PySide2.QtCore import QUrl, Slot
 
 from .constants import CLIENT_NAME
 from .data import Song
 from .client import Client
-
-# FFmpeg log levels: {0:panic, 8:fatal, 16:error, 24:warning, 32:info, 40:verbose}
-musicplayer.setFfmpegLogLevel(20)
-
-songs = []
-i = 0
-
-def get_songs():
-    global i, songs
-    while True:
-        yield songs[i]
-        i += 1
-        if i >= len(songs):
-            i = 0
-
-def peek_songs(n):
-    global i, songs
-    nexti = i + 1
-    if nexti >= len(songs):
-        nexti = 0
-    return (songs[nexti:] + songs[:nexti])[:n]
+from .player import Player
 
 class App(object):
     def __init__(self):
         # Create our Music Player.
-        self.player = musicplayer.createPlayer()
-        self.player.outSamplerate = 48000  # support high quality :)
-
+        self.player = Player()
         # Create our Jellyfin Client.
         self.client = Client()
 
     def run(self):
-        global songs
-        # self.player.queue = songs()
-        # self.player.peekQueue = peek_songs
-        # self.player.playing = True
+        # Qt GUI
+        app = QApplication([])
 
-        # Setup a simple GUI.
-        root = tk.Tk()
-        root.title(CLIENT_NAME)
         if not self.client.connect():
-            win = self.connection_window(root)
+            dialog = LoginDialog(self.client)
+            dialog.show()
         else:
-            win = self.player_window(root)
             albums = self.client.get_latest_albums()
             songs = self.client.get_album_songs(albums[2])
             for song in songs:
                 self.client.get_audio_stream(song)
 
-            self.player.queue = get_songs()
-            self.player.peekQueue = peek_songs
-            self.player.playing = True
+            self.player.setQueue(songs)
 
-        root.mainloop()
+        view = PlayerView(self.player)
+        view.show()
+
+        # Run the main Qt loop
+        app.exec_()
         self.client.stop()
 
-    def player_window(self, master):
-        frame = tk.Frame(master)
-        songLabel = tk.StringVar()
 
-        def onSongChange(
-            **kwargs): songLabel.set(pprint.pformat(self.player.curSongMetadata))
+class PlayerView(QMainWindow):
+    def __init__(self, player: Player, parent=None):
+        super(PlayerView, self).__init__(parent=parent)
+        self.player = player
+        self.setWindowTitle(CLIENT_NAME)
+        self.label = QLabel('None')
+        self.button_play = QPushButton('Play/Pause')
+        self.button_next = QPushButton('Next')
+        self.button_play.clicked.connect(player.cmdPlayPause)
+        self.button_next.clicked.connect(player.cmdNext)
 
-        def cmdPlayPause(*args): self.player.playing = not self.player.playing
-        def cmdNext(*args): self.player.nextSong()
+        self.player.onSongChange = self.onSongChange
 
-        tk.Label(frame, textvariable=songLabel).pack()
-        tk.Button(frame, text="Play/Pause", command=cmdPlayPause).pack()
-        tk.Button(frame, text="Next", command=cmdNext).pack()
+        layout = QVBoxLayout()
+        layout.addWidget(self.button_play)
+        layout.addWidget(self.button_next)
+        content = QWidget()
+        content.setLayout(layout)
+        # Set dialog layout
+        self.setCentralWidget(content)
 
-        self.player.onSongChange = onSongChange
-        # self.player.playing = True # start playing
-        frame.pack()
+    def onSongChange(self, **kwargs):
+        self.label.setText(pprint.pformat(self.player.curSongMetadata))
 
 
-    def connection_window(self, master):
-        frame = tk.Frame(master)
-        def log_in(host, username, password):
-            frame.destroy()
-            if not self.client.log_in(host.get(), username.get(), password.get()):
-                self.connection_window(master, self.client)
-            else:
-                self.player_window(master)
+class LoginDialog(QDialog):
+    def __init__(self, client: Client, parent=None):
+        super(LoginDialog, self).__init__(parent)
+        self.client = client
+        self.setWindowTitle(CLIENT_NAME)
 
-        # Host
-        hostLabel = tk.Label(frame, text="Host").pack()
-        host = tk.StringVar()
-        hostEntry = tk.Entry(frame, textvariable=host).pack()
-        # Username
-        usernameLabel = tk.Label(frame, text="Username").pack()
-        username = tk.StringVar()
-        usernameEntry = tk.Entry(frame, textvariable=username).pack()
-        # Password
-        passwordLabel = tk.Label(frame, text="Password").pack()
-        password = tk.StringVar()
-        passwordEntry = tk.Entry(frame, textvariable=password, show='*').pack()
-        # Submit
-        submitButton = tk.Button(
-            frame, text='Log in', command=partial(log_in, host, username, password)).pack()
-        frame.pack()
+        self.host_label = QLabel('Host')
+        self.host = QLineEdit('https://jellyfin.org')
+        self.username_label = QLabel('Username')
+        self.username = QLineEdit('')
+        self.password_label = QLabel('Password')
+        self.password = QLineEdit('')
+        self.password.setEchoMode(QLineEdit.Password)
+        self.login_button = QPushButton("Log in")
+        self.login_button.clicked.connect(self.login)
 
+        # Create layout and add widgets
+        layout = QVBoxLayout()
+        layout.addWidget(self.host_label)
+        layout.addWidget(self.host)
+        layout.addWidget(self.username_label)
+        layout.addWidget(self.username)
+        layout.addWidget(self.password_label)
+        layout.addWidget(self.password)
+        layout.addWidget(self.login_button)
+        # Set dialog layout
+        self.setLayout(layout)
+
+    # Greets the user
+    def login(self):
+        if not self.client.log_in(self.host.text(),self.username.text(), self.password.text()):
+            print('error')
+        else:
+            self.destroy()
