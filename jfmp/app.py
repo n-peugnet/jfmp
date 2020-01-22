@@ -19,33 +19,35 @@ from .client import Client
 # FFmpeg log levels: {0:panic, 8:fatal, 16:error, 24:warning, 32:info, 40:verbose}
 musicplayer.setFfmpegLogLevel(20)
 
+songs = []
+i = 0
 
-def songs():
-    global i, files
+def get_songs():
+    global i, songs
     while True:
-        yield Song(files[i])
+        yield songs[i]
         i += 1
-        if i >= len(files):
+        if i >= len(songs):
             i = 0
 
-
 def peek_songs(n):
+    global i, songs
     nexti = i + 1
-    if nexti >= len(files):
+    if nexti >= len(songs):
         nexti = 0
-    return map(Song, (files[nexti:] + files[:nexti])[:n])
-
+    return (songs[nexti:] + songs[:nexti])[:n]
 
 class App(object):
     def __init__(self):
         # Create our Music Player.
         self.player = musicplayer.createPlayer()
-        self.player.outSamplerate = 96000  # support high quality :)
+        self.player.outSamplerate = 48000  # support high quality :)
 
         # Create our Jellyfin Client.
         self.client = Client()
 
     def run(self):
+        global songs
         # self.player.queue = songs()
         # self.player.peekQueue = peek_songs
         # self.player.playing = True
@@ -57,8 +59,15 @@ class App(object):
             win = self.connection_window(root)
         else:
             win = self.player_window(root)
-        albums = self.client.get_latest_albums()
-        songs = self.client.get_album_songs(albums[0])
+            albums = self.client.get_latest_albums()
+            songs = self.client.get_album_songs(albums[2])
+            for song in songs:
+                self.client.get_audio_stream(song)
+
+            self.player.queue = get_songs()
+            self.player.peekQueue = peek_songs
+            self.player.playing = True
+
         root.mainloop()
         self.client.stop()
 

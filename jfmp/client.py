@@ -4,8 +4,8 @@ import os
 from getpass import getpass
 from typing import List
 
-from jellyfin_apiclient_python import JellyfinClient
-from jellyfin_apiclient_python.connection_manager import CONNECTION_STATE
+from .jellyfin.jellyfin_apiclient_python.client import JellyfinClient
+from .jellyfin.jellyfin_apiclient_python.connection_manager import CONNECTION_STATE
 
 from .file import conf_file
 from .constants import CLIENT_NAME, CLIENT_VERSION, COMMAND_NAME
@@ -79,3 +79,6 @@ class Client(JellyfinClient):
             'IncludeItemTypes': 'Audio'
         })
         return [Song(i) for i in response['Items']]
+
+    def get_audio_stream(self, song: Song):
+        self.jellyfin.get_audio_stream(song.wstream, song.get_id(), 'test', 'opus,mp3|mp3,aac,m4a|aac,flac,webma,webm,wav')
