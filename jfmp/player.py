@@ -33,6 +33,12 @@ class Player():
             next_song = 0
         return map(clone_song, (self.songs[next_song:] + self.songs[:next_song])[:n])
 
+    def cmd_play(self):
+        self.core.playing = True
+
+    def cmd_pause(self):
+        self.core.playing = False
+
     def cmd_play_pause(self,*args):
         if not self.core.playing and len(self.songs) == 0:
             return False

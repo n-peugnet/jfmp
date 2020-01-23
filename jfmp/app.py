@@ -8,6 +8,7 @@ import os
 import fnmatch
 from pprint import pprint
 from functools import partial
+from time import sleep
 from typing import List
 
 from PySide2.QtWidgets import *
@@ -52,10 +53,12 @@ class App(object):
 
     def play_album(self, album: Album):
         songs = self.client.get_album_songs(album)
+        self.player.cmd_pause()
         self.player.set_queue(songs)
         worker = Worker(lambda songs: [self.client.get_audio_stream(s) for s in songs], songs)
         self.threadpool.start(worker)
-        self.player.core.playing = True
+        sleep(2) # dirty sleep before I find a way to wait for the stream loading
+        self.player.cmd_play()
 
 
 class PlayerWindow(QMainWindow):

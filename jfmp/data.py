@@ -1,6 +1,121 @@
 from os import path
+from io import BufferedIOBase
 
 from .file import cache_file
+
+
+class DualPositionBytesIO(BufferedIOBase):
+
+    """Buffered I/O implementation using an in-memory bytes buffer."""
+
+    def __init__(self, initial_bytes=None):
+        buf = bytearray()
+        if initial_bytes is not None:
+            buf.extend(initial_bytes)
+        self._buffer = buf
+        self._pos = 0
+        self._write_pos = 0
+
+    def __getstate__(self):
+        if self.closed:
+            raise ValueError("__getstate__ on closed file")
+        return self.__dict__.copy()
+
+    def getvalue(self):
+        """Return the bytes value (contents) of the buffer
+        """
+        if self.closed:
+            raise ValueError("getvalue on closed file")
+        return bytes(self._buffer)
+
+    def read(self, n=None):
+        if self.closed:
+            raise ValueError("read from closed file")
+        if n is None:
+            n = -1
+        # if not isinstance(n, (int, long)):
+        #     raise TypeError("integer argument expected, got {0!r}".format(
+        #         type(n)))
+        if n < 0:
+            n = len(self._buffer)
+        if len(self._buffer) <= self._pos:
+            return b""
+        newpos = min(len(self._buffer), self._pos + n)
+        b = self._buffer[self._pos : newpos]
+        self._pos = newpos
+        return bytes(b)
+
+    def read1(self, n):
+        """This is the same as read.
+        """
+        return self.read(n)
+
+    def write(self, b):
+        if self.closed:
+            raise ValueError("write to closed file")
+        # if isinstance(b, unicode):
+        #     raise TypeError("can't write unicode to binary stream")
+        n = len(b)
+        if n == 0:
+            return 0
+        pos = self._write_pos
+        if pos > len(self._buffer):
+            # Inserts null bytes between the current end of the file
+            # and the new write position.
+            padding = b'\x00' * (pos - len(self._buffer))
+            self._buffer += padding
+        self._buffer[pos:pos + n] = b
+        self._write_pos += n
+        return n
+
+    def seek(self, pos, whence=0):
+        if self.closed:
+            raise ValueError("seek on closed file")
+        try:
+            pos.__index__
+        except AttributeError:
+            raise TypeError("an integer is required")
+        if whence == 0:
+            if pos < 0:
+                raise ValueError("negative seek position %r" % (pos,))
+            self._pos = pos
+        elif whence == 1:
+            self._pos = max(0, self._pos + pos)
+        elif whence == 2:
+            self._pos = max(0, len(self._buffer) + pos)
+        else:
+            raise ValueError("invalid whence value")
+        return self._pos
+
+    def tell(self):
+        if self.closed:
+            raise ValueError("tell on closed file")
+        return self._pos
+
+    def truncate(self, pos=None):
+        if self.closed:
+            raise ValueError("truncate on closed file")
+        if pos is None:
+            pos = self._pos
+        else:
+            try:
+                pos.__index__
+            except AttributeError:
+                raise TypeError("an integer is required")
+            if pos < 0:
+                raise ValueError("negative truncate position %r" % (pos,))
+        del self._buffer[pos:]
+        return pos
+
+    def readable(self):
+        return True
+
+    def writable(self):
+        return True
+
+    def seekable(self):
+        return True
+
 
 class Song:
     def __init__(self, raw):
@@ -9,12 +124,9 @@ class Song:
         self.Name = raw['Name']
         self.Album = raw['Album']
         self.AlbumArtist = raw['AlbumArtist']
-        self.url = cache_file(self.get_id())
-        if path.exists(self.url):
-            self.wstream = open(self.url, "ab")
-        else:
-            self.wstream = open(self.url, "wb")
-        self.rstream = open(self.url, "rb")
+        # In-memory right now, will try to make a cache later
+        self.io = DualPositionBytesIO()
+        self.url = cache_file(f'{self.get_id()} - {self.Name}')
 
     def __eq__(self, other):
         return self.id == other.id
@@ -25,15 +137,18 @@ class Song:
     def get_id(self):
         return self.id
 
+    def get_input(self):
+        return self.io
+
     def readPacket(self, bufSize):
-        s = self.rstream.read(bufSize)
+        s = self.io.read(bufSize)
         # print "readPacket", self, bufSize, len(s)
         return s
 
     def seekRaw(self, offset, whence):
-        r = self.rstream.seek(offset, whence)
+        r = self.io.seek(offset, whence)
         # print "seekRaw", self, offset, whence, r, self.rstream.tell()
-        return self.rstream.tell()
+        return self.io.tell()
 
     def clone(self):
         return Song(self.raw)
