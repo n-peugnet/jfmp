@@ -6,12 +6,9 @@
 import sys
 import os
 import fnmatch
-import pprint
 from functools import partial
 
-from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QDialog, QLineEdit, QPushButton, QVBoxLayout, QWidget
-from PySide2.QtQuick import QQuickView
-from PySide2.QtCore import QUrl, Slot
+from PySide2.QtWidgets import *
 
 from .constants import CLIENT_NAME
 from .data import Song
@@ -28,10 +25,10 @@ class App(object):
     def run(self):
         # Qt GUI
         app = QApplication([])
-        view = PlayerView(self.player)
+        main = PlayerWindow(self.player, self.client)
 
         if not self.client.connect():
-            dialog = LoginDialog(self.client, view)
+            dialog = LoginDialog(self.client, main)
             dialog.show()
         else:
             albums = self.client.get_latest_albums()
@@ -41,27 +38,34 @@ class App(object):
 
             self.player.set_queue(songs)
 
-        view.show()
+        main.show()
 
         # Run the main Qt loop
         app.exec_()
         self.client.stop()
 
 
-class PlayerView(QMainWindow):
-    def __init__(self, player: Player, parent=None):
-        super(PlayerView, self).__init__(parent=parent)
+class PlayerWindow(QMainWindow):
+    def __init__(self, player: Player, client: Client, parent=None):
+        super(PlayerWindow, self).__init__(parent=parent)
         self.player = player
         self.setWindowTitle(CLIENT_NAME)
-        self.label = QLabel('None')
+        self.albums_list = QListView()
+        self.song_label = QLabel('None')
+        self.album_label = QLabel('None')
+        self.artist_label = QLabel('None')
         self.button_play = QPushButton('Play/Pause')
         self.button_next = QPushButton('Next')
         self.button_play.clicked.connect(player.cmd_play_pause)
         self.button_next.clicked.connect(player.cmd_next)
 
-        self.player.onSongChange = self.onSongChange
+        self.player.add_event_listener('song_change', self.on_song_change)
 
         layout = QVBoxLayout()
+        layout.addWidget(self.albums_list)
+        layout.addWidget(self.song_label)
+        layout.addWidget(self.album_label)
+        layout.addWidget(self.artist_label)
         layout.addWidget(self.button_play)
         layout.addWidget(self.button_next)
         content = QWidget()
@@ -69,8 +73,10 @@ class PlayerView(QMainWindow):
         # Set dialog layout
         self.setCentralWidget(content)
 
-    def onSongChange(self, **kwargs):
-        self.label.setText(self.player.get_metadata())
+    def on_song_change(self, newSong, **kwargs):
+        self.song_label.setText(newSong.Name)
+        self.album_label.setText(newSong.Album)
+        self.artist_label.setText(newSong.AlbumArtist)
 
 
 class LoginDialog(QDialog):

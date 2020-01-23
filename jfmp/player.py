@@ -1,3 +1,5 @@
+import pprint
+from collections import defaultdict
 from typing import List
 
 import musicplayer
@@ -13,8 +15,10 @@ class Player():
         self.core.outSamplerate = outSamplerate
         self.core.queue = self.get_songs()
         self.core.peekQueue = self.peek_songs
+        self.core.onSongChange = self._process_onSongChange
         self.songs = []
         self.curr_song = 0
+        self.events = defaultdict(list)
 
     def get_songs(self):
         while True:
@@ -43,3 +47,14 @@ class Player():
 
     def add_to_queue(self, song: Song):
         self.songs += song
+
+    def add_event_listener(self, event: str, func):
+        self.events[event].append(func)
+
+    def _process_events(self, event: str, **kwargs):
+        if self.events.get(event):
+            for func in self.events[event]:
+                func(**kwargs)
+
+    def _process_onSongChange(self, **kwargs):
+        self._process_events('song_change', **kwargs)
