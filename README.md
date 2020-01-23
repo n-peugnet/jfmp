@@ -2,7 +2,7 @@
 
 AKA jfmp, a minimalist cross-platform gapless music player for Jellyfin.
 
-![screenshot 1](docs/screenshot_01.png)
+![screenshot 1](docs/screenshot_02.png)
 
 ## Install from sources
 
@@ -30,11 +30,27 @@ apt-get install libavformat-dev libavresample-dev
     pip install --user pipenv
     pipenv install
 
+_Note: if you want to use your system theme you will have to symlink your virtualenv's `PySide2` folder to your system one. It is probably located around `/usr/lib/python3/dist-packages/PySide2`._
+
 ## Run
 
     pipenv run ./main.py
 
-##  Built With
+## Built With
 
 -   [music-player-core](https://github.com/albertz/music-player-core)
 -   [jellyfin-apiclient-python](https://github.com/iwalton3/jellyfin-apiclient-python)
+
+## To Do
+
+- Really working cache and streaming system
+- Pip package with Wheel dist (using GitHub actions ?)
+- List all albums with lazy loading (Check Qt possibilities)
+- Songs & Artists list (Tabs ?)
+- Sort lists (QTableWidgets ?)
+- Quick jump in list (with keyboard keys)
+- Search functionality
+- Queue managment (Reorder, Play next, Add to Queue...)
+- Remote Jellyfin control
+- Desktop integration (using DBUS ? Needs research)
+- Packaging (APT first)
