@@ -55,10 +55,15 @@ class App(object):
         songs = self.client.get_album_songs(album)
         self.player.cmd_pause()
         self.player.set_queue(songs)
-        worker = Worker(lambda songs: [self.client.get_audio_stream(s) for s in songs], songs)
+        worker = Worker(lambda songs: [self.download_stream(s) for s in songs], songs)
         self.threadpool.start(worker)
         sleep(2) # dirty sleep before I find a way to wait for the stream loading
         self.player.cmd_play()
+
+    def download_stream(self, song: Song):
+        if not song.read_from_cache():
+            self.client.get_audio_stream(song)
+            song.write_to_cache()
 
 
 class PlayerWindow(QMainWindow):

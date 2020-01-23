@@ -76,7 +76,8 @@ class Client(JellyfinClient):
     def get_album_songs(self, album: Album) -> List[Song]:
         response = self.jellyfin.user_items(params={
             'ParentId': album.get_id(),
-            'IncludeItemTypes': 'Audio'
+            'IncludeItemTypes': 'Audio',
+            'SortBy': 'SortName',
         })
         return [Song(i) for i in response['Items']]
 

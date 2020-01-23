@@ -124,8 +124,7 @@ class Song:
         self.Name = raw['Name']
         self.Album = raw['Album']
         self.AlbumArtist = raw['AlbumArtist']
-        # In-memory right now, will try to make a cache later
-        self.io = DualPositionBytesIO()
+        self.buff = DualPositionBytesIO()
         self.url = cache_file(f'{self.get_id()} - {self.Name}')
 
     def __eq__(self, other):
@@ -138,17 +137,29 @@ class Song:
         return self.id
 
     def get_input(self):
-        return self.io
+        return self.buff
+
+    def read_from_cache(self):
+        if path.exists(self.url) and path.getsize(self.url) > 0:
+            with open(self.url, 'rb') as f:
+                self.buff.write(f.read())
+                return True
+        return False
+
+    def write_to_cache(self):
+        f = open(self.url, 'wb')
+        f.write(self.buff.getvalue())
+        f.close()
 
     def readPacket(self, bufSize):
-        s = self.io.read(bufSize)
+        s = self.buff.read(bufSize)
         # print "readPacket", self, bufSize, len(s)
         return s
 
     def seekRaw(self, offset, whence):
-        r = self.io.seek(offset, whence)
+        r = self.buff.seek(offset, whence)
         # print "seekRaw", self, offset, whence, r, self.rstream.tell()
-        return self.io.tell()
+        return self.buff.tell()
 
     def clone(self):
         return Song(self.raw)
