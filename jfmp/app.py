@@ -8,12 +8,13 @@ import os
 import fnmatch
 from pprint import pprint
 from functools import partial
+from typing import List
 
 from PySide2.QtWidgets import *
 from PySide2.QtCore import Slot, QRunnable, QThreadPool, Qt
 
 from .constants import CLIENT_NAME
-from .data import Song
+from .data import Song, Album
 from .client import Client
 from .player import Player
 
@@ -28,28 +29,39 @@ class App(object):
     def run(self):
         # Qt GUI
         app = QApplication([])
-        main = PlayerWindow(self.threadpool, self.player, self.client)
+        self.main = PlayerWindow(self)
 
         if not self.client.connect():
-            dialog = LoginDialog(self.client, main)
+            dialog = LoginDialog(self, self.main)
             dialog.show()
         else:
-            worker = Worker(main.load_latest_albums)
-            self.threadpool.start(worker)
+            self.display_latest_albums()
 
-        main.show()
+        self.main.show()
 
         # Run the main Qt loop
         app.exec_()
         self.client.stop()
 
+    def display_latest_albums(self):
+        def display_latest_albums():
+            self.main.display_albums(self.client.get_latest_albums())
+        if self.client.logged_in:
+            worker = Worker(display_latest_albums)
+            self.threadpool.start(worker)
+
+    def play_album(self, album: Album):
+        songs = self.client.get_album_songs(album)
+        self.player.set_queue(songs)
+        worker = Worker(lambda songs: [self.client.get_audio_stream(s) for s in songs], songs)
+        self.threadpool.start(worker)
+        self.player.core.playing = True
+
 
 class PlayerWindow(QMainWindow):
-    def __init__(self, threadpool: QThreadPool, player: Player, client: Client, parent=None):
+    def __init__(self, app: App, parent=None):
         super(PlayerWindow, self).__init__(parent=parent)
-        self.threadpool = threadpool
-        self.player = player
-        self.client = client
+        self.app = app
         self.setWindowTitle(CLIENT_NAME)
         self.albums_list = QListWidget()
         self.song_label = QLabel('None')
@@ -57,11 +69,11 @@ class PlayerWindow(QMainWindow):
         self.artist_label = QLabel('None')
         self.button_play = QPushButton('Play/Pause')
         self.button_next = QPushButton('Next')
-        self.button_play.clicked.connect(player.cmd_play_pause)
-        self.button_next.clicked.connect(player.cmd_next)
+        self.button_play.clicked.connect(app.player.cmd_play_pause)
+        self.button_next.clicked.connect(app.player.cmd_next)
 
         self.albums_list.doubleClicked.connect(self.play_album_songs)
-        self.player.add_event_listener('song_change', self.on_song_change)
+        app.player.add_event_listener('song_change', self.on_song_change)
 
         layout = QVBoxLayout()
         layout.addWidget(self.albums_list)
@@ -80,26 +92,21 @@ class PlayerWindow(QMainWindow):
         self.album_label.setText(newSong.Album)
         self.artist_label.setText(newSong.AlbumArtist)
 
-    def load_latest_albums(self):
-        if self.client.logged_in:
-            for album in self.client.get_latest_albums():
-                item = QListWidgetItem(album.Name)
-                item.setData(Qt.UserRole, album)
-                self.albums_list.addItem(item)
+    def display_albums(self, albums: List[Album]):
+        for album in albums:
+            item = QListWidgetItem(album.Name)
+            item.setData(Qt.UserRole, album)
+            self.albums_list.addItem(item)
 
     def play_album_songs(self, item: QListWidgetItem):
         album = item.data(Qt.UserRole)
-        songs = self.client.get_album_songs(album)
-        self.player.set_queue(songs)
-        worker = Worker(lambda songs: [self.client.get_audio_stream(s) for s in songs], songs)
-        self.threadpool.start(worker)
-        self.player.core.playing = True
+        self.app.play_album(album)
 
 
 class LoginDialog(QDialog):
-    def __init__(self, client: Client, parent=None):
+    def __init__(self, app: App, parent=None):
         super(LoginDialog, self).__init__(parent)
-        self.client = client
+        self.app = app
         self.setWindowTitle(CLIENT_NAME)
 
         self.host_label = QLabel('Host')
@@ -126,10 +133,11 @@ class LoginDialog(QDialog):
 
     @Slot()
     def login(self):
-        if not self.client.log_in(self.host.text(),self.username.text(), self.password.text()):
-            print('error')
+        self.destroy()
+        if not self.app.client.log_in(self.host.text(),self.username.text(), self.password.text()):
+            LoginDialog(self.app, self.parentWidget()).show()
         else:
-            self.destroy()
+            self.app.display_latest_albums()
 
 class Worker(QRunnable):
     '''

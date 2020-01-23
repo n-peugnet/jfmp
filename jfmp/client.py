@@ -51,8 +51,8 @@ class Client(JellyfinClient):
         return True
 
     def log_in(self, host: str, username: str, password: str) -> bool:
-        self.auth.connect_to_address(host)
-        self.auth.login(host, username, password)
+        if self.auth.connect_to_address(host) is False: return False
+        if self.auth.login(host, username, password) is False: return False
         state = self.auth.connect()
         if state['State'] == CONNECTION_STATE['SignedIn']:
             self._save_credentials(self.auth.credentials.get_credentials())

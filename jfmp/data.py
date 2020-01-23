@@ -9,12 +9,12 @@ class Song:
         self.Name = raw['Name']
         self.Album = raw['Album']
         self.AlbumArtist = raw['AlbumArtist']
-        self.path = cache_file(self.get_id())
-        if path.exists(self.path):
-            self.wstream = open(self.path, "ab")
+        self.url = cache_file(self.get_id())
+        if path.exists(self.url):
+            self.wstream = open(self.url, "ab")
         else:
-            self.wstream = open(self.path, "wb")
-        self.rstream = open(self.path, "rb")
+            self.wstream = open(self.url, "wb")
+        self.rstream = open(self.url, "rb")
 
     def __eq__(self, other):
         return self.id == other.id
