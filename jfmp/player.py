@@ -2,42 +2,44 @@ from typing import List
 
 import musicplayer
 
-from .data import Song
+from .data import Song, clone_song
 
 # FFmpeg log levels: {0:panic, 8:fatal, 16:error, 24:warning, 32:info, 40:verbose}
 musicplayer.setFfmpegLogLevel(20)
 
-songs = []
-i = 0
-
-def get_songs():
-    global i, songs
-    while True:
-        yield songs[i]
-        i += 1
-        if i >= len(songs):
-            i = 0
-
-def peek_songs(n):
-    global i, songs
-    nexti = i + 1
-    if nexti >= len(songs):
-        nexti = 0
-    return (songs[nexti:] + songs[:nexti])[:n]
-
 class Player():
     def __init__(self, outSamplerate = 48000):
-        self.player = musicplayer.createPlayer()
-        self.player.outSamplerate = outSamplerate
-        self.player.queue = get_songs()
-        self.player.peekQueue = peek_songs
+        self.core = musicplayer.createPlayer()
+        self.core.outSamplerate = outSamplerate
+        self.core.queue = self.get_songs()
+        self.core.peekQueue = self.peek_songs
+        self.songs = []
+        self.curr_song = 0
 
-    def cmdPlayPause(self,*args):
-        self.player.playing = not self.player.playing
+    def get_songs(self):
+        while True:
+            yield self.songs[self.curr_song]
+            self.curr_song += 1
+            if self.curr_song >= len(self.songs):
+                self.curr_song = 0
 
-    def cmdNext(self, *args):
-        self.player.nextSong()
+    def peek_songs(self, n):
+        next_song = self.curr_song + 1
+        if next_song >= len(self.songs):
+            next_song = 0
+        return map(clone_song, (self.songs[next_song:] + self.songs[:next_song])[:n])
 
-    def setQueue(self, queue: List[Song]):
-        global songs
-        songs = queue
+    def cmd_play_pause(self,*args):
+        self.core.playing = not self.core.playing
+
+    def cmd_next(self, *args):
+        self.core.nextSong()
+
+    def get_metadata(self):
+        return pprint.pformat(self.core.curSongMetadata)
+
+    def set_queue(self, songs: List[Song]):
+        self.songs = songs
+
+    def add_to_queue(self, song: Song):
+        self.songs += song

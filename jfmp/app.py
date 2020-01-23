@@ -28,9 +28,10 @@ class App(object):
     def run(self):
         # Qt GUI
         app = QApplication([])
+        view = PlayerView(self.player)
 
         if not self.client.connect():
-            dialog = LoginDialog(self.client)
+            dialog = LoginDialog(self.client, view)
             dialog.show()
         else:
             albums = self.client.get_latest_albums()
@@ -38,9 +39,8 @@ class App(object):
             for song in songs:
                 self.client.get_audio_stream(song)
 
-            self.player.setQueue(songs)
+            self.player.set_queue(songs)
 
-        view = PlayerView(self.player)
         view.show()
 
         # Run the main Qt loop
@@ -56,8 +56,8 @@ class PlayerView(QMainWindow):
         self.label = QLabel('None')
         self.button_play = QPushButton('Play/Pause')
         self.button_next = QPushButton('Next')
-        self.button_play.clicked.connect(player.cmdPlayPause)
-        self.button_next.clicked.connect(player.cmdNext)
+        self.button_play.clicked.connect(player.cmd_play_pause)
+        self.button_next.clicked.connect(player.cmd_next)
 
         self.player.onSongChange = self.onSongChange
 
@@ -70,7 +70,7 @@ class PlayerView(QMainWindow):
         self.setCentralWidget(content)
 
     def onSongChange(self, **kwargs):
-        self.label.setText(pprint.pformat(self.player.curSongMetadata))
+        self.label.setText(self.player.get_metadata())
 
 
 class LoginDialog(QDialog):
@@ -101,7 +101,7 @@ class LoginDialog(QDialog):
         # Set dialog layout
         self.setLayout(layout)
 
-    # Greets the user
+    @Slot()
     def login(self):
         if not self.client.log_in(self.host.text(),self.username.text(), self.password.text()):
             print('error')
