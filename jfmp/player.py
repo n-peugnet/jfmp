@@ -46,6 +46,8 @@ class Player():
 
     def set_queue(self, songs: List[Song]):
         self.songs = songs
+        self.curr_song = 0
+        self.core.nextSong()
 
     def add_to_queue(self, song: Song):
         self.songs += song

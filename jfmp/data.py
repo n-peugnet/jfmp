@@ -6,6 +6,9 @@ class Song:
     def __init__(self, raw):
         self.raw = raw
         self.id = raw['Id']
+        self.Name = raw['Name']
+        self.Album = raw['Album']
+        self.AlbumArtist = raw['AlbumArtist']
         self.path = cache_file(self.get_id())
         if path.exists(self.path):
             self.wstream = open(self.path, "ab")
@@ -14,10 +17,10 @@ class Song:
         self.rstream = open(self.path, "rb")
 
     def __eq__(self, other):
-        return self.url == other.url
+        return self.id == other.id
 
-    def __getattr__(self, name):
-        return self.raw.get(name)
+    # def __getattr__(self, name):
+    #     return self.raw.get(name)
 
     def get_id(self):
         return self.id
