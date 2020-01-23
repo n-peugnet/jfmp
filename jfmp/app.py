@@ -6,9 +6,11 @@
 import sys
 import os
 import fnmatch
+from pprint import pprint
 from functools import partial
 
 from PySide2.QtWidgets import *
+from PySide2.QtCore import Slot, QRunnable, QThreadPool, Qt
 
 from .constants import CLIENT_NAME
 from .data import Song
@@ -21,22 +23,19 @@ class App(object):
         self.player = Player()
         # Create our Jellyfin Client.
         self.client = Client()
+        self.threadpool = QThreadPool()
 
     def run(self):
         # Qt GUI
         app = QApplication([])
-        main = PlayerWindow(self.player, self.client)
+        main = PlayerWindow(self.threadpool, self.player, self.client)
 
         if not self.client.connect():
             dialog = LoginDialog(self.client, main)
             dialog.show()
         else:
-            albums = self.client.get_latest_albums()
-            songs = self.client.get_album_songs(albums[2])
-            for song in songs:
-                self.client.get_audio_stream(song)
-
-            self.player.set_queue(songs)
+            worker = Worker(main.load_latest_albums)
+            self.threadpool.start(worker)
 
         main.show()
 
@@ -46,11 +45,13 @@ class App(object):
 
 
 class PlayerWindow(QMainWindow):
-    def __init__(self, player: Player, client: Client, parent=None):
+    def __init__(self, threadpool: QThreadPool, player: Player, client: Client, parent=None):
         super(PlayerWindow, self).__init__(parent=parent)
+        self.threadpool = threadpool
         self.player = player
+        self.client = client
         self.setWindowTitle(CLIENT_NAME)
-        self.albums_list = QListView()
+        self.albums_list = QListWidget()
         self.song_label = QLabel('None')
         self.album_label = QLabel('None')
         self.artist_label = QLabel('None')
@@ -59,6 +60,7 @@ class PlayerWindow(QMainWindow):
         self.button_play.clicked.connect(player.cmd_play_pause)
         self.button_next.clicked.connect(player.cmd_next)
 
+        self.albums_list.doubleClicked.connect(self.play_album_songs)
         self.player.add_event_listener('song_change', self.on_song_change)
 
         layout = QVBoxLayout()
@@ -77,6 +79,21 @@ class PlayerWindow(QMainWindow):
         self.song_label.setText(newSong.Name)
         self.album_label.setText(newSong.Album)
         self.artist_label.setText(newSong.AlbumArtist)
+
+    def load_latest_albums(self):
+        if self.client.logged_in:
+            for album in self.client.get_latest_albums():
+                item = QListWidgetItem(album.Name)
+                item.setData(Qt.UserRole, album)
+                self.albums_list.addItem(item)
+
+    def play_album_songs(self, item: QListWidgetItem):
+        album = item.data(Qt.UserRole)
+        songs = self.client.get_album_songs(album)
+        self.player.set_queue(songs)
+        worker = Worker(lambda songs: [self.client.get_audio_stream(s) for s in songs], songs)
+        self.threadpool.start(worker)
+        self.player.core.playing = True
 
 
 class LoginDialog(QDialog):
@@ -113,3 +130,31 @@ class LoginDialog(QDialog):
             print('error')
         else:
             self.destroy()
+
+class Worker(QRunnable):
+    '''
+    Worker thread
+
+    Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
+
+    :param callback: The function callback to run on this worker thread. Supplied args and 
+                     kwargs will be passed through to the runner.
+    :type callback: function
+    :param args: Arguments to pass to the callback function
+    :param kwargs: Keywords to pass to the callback function
+
+    '''
+
+    def __init__(self, fn, *args, **kwargs):
+        super(Worker, self).__init__()
+        # Store constructor arguments (re-used for processing)
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs
+
+    @Slot()
+    def run(self):
+        '''
+        Initialise the runner function with passed args, kwargs.
+        '''
+        self.fn(*self.args, **self.kwargs)

@@ -1,6 +1,8 @@
 # Jellyfin Music Player
 
-AKA jfmp
+AKA jfmp, a minimalist cross-platform gapless music player for Jellyfin.
+
+![screenshot 1](docs/screenshot_01.png)
 
 ## Install from sources
 

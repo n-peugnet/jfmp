@@ -42,7 +42,7 @@ class Album:
         self.id = raw['Id']
     
     def __getattr__(self, name):
-        return raw.get(name)
+        return self.raw.get(name)
 
     def get_id(self):
         return self.id
