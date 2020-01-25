@@ -21,7 +21,7 @@ from typing import List
 
 import musicplayer
 
-from .data import Song, clone_song
+from .data import Song
 
 # FFmpeg log levels: {0:panic, 8:fatal, 16:error, 24:warning, 32:info, 40:verbose}
 musicplayer.setFfmpegLogLevel(20)
@@ -59,7 +59,7 @@ class Player():
         next_song = self.curr_song + 1
         if next_song >= len(self.songs):
             next_song = 0
-        return map(clone_song, (self.songs[next_song:] + self.songs[:next_song])[:n])
+        return (self.songs[next_song:] + self.songs[:next_song])[:n]
 
     def cmd_play(self):
         """Start playback."""

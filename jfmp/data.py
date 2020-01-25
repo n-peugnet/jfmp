@@ -142,6 +142,7 @@ class Song:
         self.AlbumArtist = raw['AlbumArtist']
         self.buff = DualPositionBytesIO()
         self.url = cache_file(f'{self.get_id()} - {self.Name}')
+        self.item = None
 
     def __eq__(self, other):
         return self.id == other.id
@@ -189,10 +190,6 @@ class Song:
         # print "seekRaw", self, offset, whence, r, self.rstream.tell()
         return self.buff.tell()
 
-    def clone(self):
-        """Returns a copy of the current song."""
-        return Song(self.raw)
-
 
 class Album:
     """Album object.
@@ -213,8 +210,3 @@ class Album:
     def get_id(self):
         """Returns the id."""
         return self.id
-
-
-def clone_song(song: Song) -> Song:
-    """Returns a copy of the given song."""
-    return song.clone()

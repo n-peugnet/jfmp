@@ -18,6 +18,7 @@
 from time import sleep
 from typing import List
 
+from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from PySide2.QtCore import Slot, QRunnable, QThreadPool, Qt
 
@@ -73,7 +74,7 @@ class App:
             worker = Worker(display_latest_albums)
             self.threadpool.start(worker)
 
-    def play_album(self, album: Album):
+    def play_songs(self, songs: List[Song]):
         """Replaces the queue with the given album songs and start playing.
 
         Parameters
@@ -81,13 +82,13 @@ class App:
         album : Album
             The album to start playing.
         """
-        songs = self.client.get_album_songs(album)
         worker = Worker(
             lambda songs: [self.download_stream(s) for s in songs], songs)
         self.threadpool.start(worker)
         sleep(2)  # dirty sleep before I find a way to wait for the stream loading
         self.player.set_queue(songs)
         self.player.cmd_play()
+        return songs
 
     def download_stream(self, song: Song):
         """Fills the buffer of a given song."""
@@ -111,7 +112,14 @@ class PlayerWindow(QMainWindow):
         super(PlayerWindow, self).__init__(parent=parent)
         self.app = app
         self.setWindowTitle(CLIENT_NAME)
+
         self.albums_list = QListWidget()
+        self.queue_list = QListWidget()
+        self.albums_list.setStyleSheet("QListView::item { height: 17px; width: 100%}")
+        self.queue_list.setStyleSheet("QListView::item { height: 17px; width: 100%}")
+        self.list_tabs = QTabWidget()
+        self.list_tabs.addTab(self.albums_list, 'Albums')
+        self.list_tabs.addTab(self.queue_list, 'Queue')
         self.song_label = QLabel('None')
         self.album_label = QLabel('None')
         self.artist_label = QLabel('None')
@@ -124,7 +132,7 @@ class PlayerWindow(QMainWindow):
         app.player.add_event_listener('song_change', self.on_song_change)
 
         layout = QVBoxLayout()
-        layout.addWidget(self.albums_list)
+        layout.addWidget(self.list_tabs)
         layout.addWidget(self.song_label)
         layout.addWidget(self.album_label)
         layout.addWidget(self.artist_label)
@@ -136,11 +144,14 @@ class PlayerWindow(QMainWindow):
         self.setCentralWidget(content)
 
     # pylint: disable=unused-argument
-    def on_song_change(self, newSong, **kwargs):
+    def on_song_change(self, oldSong: Song, newSong: Song, **kwargs):
         """Handler for song change event."""
         self.song_label.setText(newSong.Name)
         self.album_label.setText(newSong.Album)
         self.artist_label.setText(newSong.AlbumArtist)
+        if oldSong is not None and oldSong.item is not None:
+            oldSong.item.setIcon(QIcon())
+        newSong.item.setIcon(QIcon.fromTheme('media-playback-start'))
 
     def display_albums(self, albums: List[Album]):
         """Displays a list of albums."""
@@ -152,7 +163,17 @@ class PlayerWindow(QMainWindow):
     def on_album_doubleclick(self, item: QListWidgetItem):
         """Handler for double click event on album."""
         album = item.data(Qt.UserRole)
-        self.app.play_album(album)
+        songs = self.app.client.get_album_songs(album)
+        for i in range(self.queue_list.count()):
+            self.queue_list.item(i).data(Qt.UserRole).item = None
+        self.queue_list.clear()
+        for song in songs:
+            item = QListWidgetItem(song.Name)
+            item.setData(Qt.UserRole, song)
+            song.item = item
+            self.queue_list.addItem(item)
+        self.list_tabs.setCurrentWidget(self.queue_list)
+        self.app.play_songs(songs)
 
 
 class LoginDialog(QDialog):
