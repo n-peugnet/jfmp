@@ -54,10 +54,10 @@ class App(object):
     def play_album(self, album: Album):
         songs = self.client.get_album_songs(album)
         self.player.cmd_pause()
-        self.player.set_queue(songs)
         worker = Worker(lambda songs: [self.download_stream(s) for s in songs], songs)
         self.threadpool.start(worker)
         sleep(2) # dirty sleep before I find a way to wait for the stream loading
+        self.player.set_queue(songs)
         self.player.cmd_play()
 
     def download_stream(self, song: Song):

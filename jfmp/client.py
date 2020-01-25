@@ -82,4 +82,4 @@ class Client(JellyfinClient):
         return [Song(i) for i in response['Items']]
 
     def get_audio_stream(self, song: Song):
-        self.jellyfin.get_audio_stream(song.wstream, song.get_id(), 'test', 'opus,mp3|mp3,aac,m4a|aac,flac,webma,webm,wav')
+        self.jellyfin.get_audio_stream(song.get_input(), song.get_id(), 'test', 'opus,mp3|mp3,aac,m4a|aac,flac,webma,webm,wav')

@@ -24,7 +24,7 @@ apt-get install python-dev libsnappy-dev libtool yasm libchromaprint-dev portaud
 apt-get install libavformat-dev libavresample-dev
 ```
 
-# Install and build
+### Install and build
 
     git clone --recurse-submodules https://github.com/n-peugnet/jfmp
     pip install --user pipenv
@@ -32,7 +32,7 @@ apt-get install libavformat-dev libavresample-dev
 
 _Note: if you want to use your system theme you will have to symlink your virtualenv's `PySide2` folder to your system one. It is probably located around `/usr/lib/python3/dist-packages/PySide2`._
 
-## Run
+### Run
 
     pipenv run ./main.py
 
@@ -43,14 +43,15 @@ _Note: if you want to use your system theme you will have to symlink your virtua
 
 ## To Do
 
-- Really working cache and streaming system
-- Pip package with Wheel dist (using GitHub actions ?)
-- List all albums with lazy loading (Check Qt possibilities)
-- Songs & Artists list (Tabs ?)
-- Sort lists (QTableWidgets ?)
-- Quick jump in list (with keyboard keys)
-- Search functionality
-- Queue managment (Reorder, Play next, Add to Queue...)
-- Remote Jellyfin control
-- Desktop integration (using DBUS ? Needs research)
-- Packaging (APT first)
+- [x] Really working cache and streaming system
+- [ ] Limit cache to a maximum size (LRU ? FIFO ?)
+- [ ] Pip package with Wheel dist (using GitHub actions ?)
+- [ ] List all albums with lazy loading (Check Qt possibilities)
+- [ ] Songs & Artists list (Tabs ?)
+- [ ] Sort lists (QTableWidgets ?)
+- [ ] Quick jump in list (with keyboard keys)
+- [ ] Search functionality
+- [ ] Queue managment (Reorder, Play next, Add to Queue...)
+- [ ] Remote Jellyfin control
+- [ ] Desktop integration (using DBUS ? Needs research)
+- [ ] Packaging (APT first)

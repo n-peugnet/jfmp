@@ -6,7 +6,12 @@ from .file import cache_file
 
 class DualPositionBytesIO(BufferedIOBase):
 
-    """Buffered I/O implementation using an in-memory bytes buffer."""
+    """
+    Buffered I/O implementation using an in-memory bytes buffer.
+
+    Derived from the original python2 implementation:
+    <https://svn.python.org/projects/python/trunk/Lib/_pyio.py>
+    """
 
     def __init__(self, initial_bytes=None):
         buf = bytearray()
@@ -33,9 +38,9 @@ class DualPositionBytesIO(BufferedIOBase):
             raise ValueError("read from closed file")
         if n is None:
             n = -1
-        # if not isinstance(n, (int, long)):
-        #     raise TypeError("integer argument expected, got {0!r}".format(
-        #         type(n)))
+        if not isinstance(n, int):
+            raise TypeError("integer argument expected, got {0!r}".format(
+                type(n)))
         if n < 0:
             n = len(self._buffer)
         if len(self._buffer) <= self._pos:
@@ -53,8 +58,8 @@ class DualPositionBytesIO(BufferedIOBase):
     def write(self, b):
         if self.closed:
             raise ValueError("write to closed file")
-        # if isinstance(b, unicode):
-        #     raise TypeError("can't write unicode to binary stream")
+        if isinstance(b, str):
+            raise TypeError("can't write unicode to binary stream")
         n = len(b)
         if n == 0:
             return 0
