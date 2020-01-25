@@ -1,5 +1,8 @@
 # python files
 __pycache__
+build/
+dist/
+jfmp.egg-info/
 
 # IDEs
 .vscode/

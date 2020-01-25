@@ -4,8 +4,8 @@ import os
 from getpass import getpass
 from typing import List
 
-from .jellyfin.jellyfin_apiclient_python.client import JellyfinClient
-from .jellyfin.jellyfin_apiclient_python.connection_manager import CONNECTION_STATE
+from jellyfin_apiclient_python.client import JellyfinClient
+from jellyfin_apiclient_python.connection_manager import CONNECTION_STATE
 
 from .file import conf_file
 from .constants import CLIENT_NAME, CLIENT_VERSION, COMMAND_NAME

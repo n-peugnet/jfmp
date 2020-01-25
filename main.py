@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from jfmp.app import App
+from jfmp.app import main
 
-app = App()
-app.run()
+if __name__ == '__main__':
+    main()

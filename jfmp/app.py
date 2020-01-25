@@ -31,6 +31,10 @@ from .data import Song, Album
 from .client import Client
 from .player import Player
 
+def main():
+    app = App()
+    app.run()
+
 class App(object):
     def __init__(self):
         # Create our Music Player.
@@ -65,7 +69,6 @@ class App(object):
 
     def play_album(self, album: Album):
         songs = self.client.get_album_songs(album)
-        self.player.cmd_pause()
         worker = Worker(lambda songs: [self.download_stream(s) for s in songs], songs)
         self.threadpool.start(worker)
         sleep(2) # dirty sleep before I find a way to wait for the stream loading
