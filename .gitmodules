@@ -1,3 +1,0 @@
-[submodule "jfmp/jellyfin"]
-	path = jellyfin
-	url = git@github.com:n-peugnet/jellyfin-apiclient-python

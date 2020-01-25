@@ -26,7 +26,7 @@ apt-get install libavformat-dev libavresample-dev
 
 ### Install and build
 
-    git clone --recurse-submodules https://github.com/n-peugnet/jfmp
+    git clone https://github.com/n-peugnet/jfmp
     pip install --user pipenv
     pipenv install
 

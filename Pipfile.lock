@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "ab0b841c82b8e00f1416cb7daef19ebb954e431b7be4547b8dcdc16003b1a121"
+            "sha256": "058d3d1e7f736edd8ed46ecffd607ddb8d1622246933fef2122766fc3c1a42c4"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -46,12 +46,9 @@
             "version": "==2.8"
         },
         "jellyfin-apiclient-python": {
-            "hashes": [
-                "sha256:64054ce3bd47b58328ef0034215bd61fe860b405182c5eaa426d4cf78f6bf0ee",
-                "sha256:c9937dd7c45b4133f3dd64320ca3c0eabb0d2d32cd05e76f94dd6c8706dec119"
-            ],
-            "index": "pypi",
-            "version": "==1.2.0"
+            "editable": true,
+            "git": "https://github.com/iwalton3/jellyfin-apiclient-python",
+            "ref": "f1036cca3d8dad2d9c7e71356dc486e7f8dc1066"
         },
         "musicplayer": {
             "git": "https://github.com/n-peugnet/music-player-core.git",
