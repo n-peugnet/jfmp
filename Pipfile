@@ -4,10 +4,12 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+autopep8 = "*"
+pylint = "*"
 
 [packages]
-jellyfin-apiclient-python = {git = "https://github.com/iwalton3/jellyfin-apiclient-python", editable = true, ref="master"}
-musicplayer = {git = "https://github.com/n-peugnet/music-player-core.git", ref = "test-branch"}
+jellyfin-apiclient-python = {git = "https://github.com/iwalton3/jellyfin-apiclient-python",editable = true}
+musicplayer = {git = "https://github.com/n-peugnet/music-player-core.git",ref = "test-branch"}
 appdirs = "==1.*"
 pyside2 = "==5.*"
 

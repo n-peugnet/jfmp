@@ -45,7 +45,7 @@ _Note: if you want to use your system theme you will have to symlink your virtua
 
 - [x] Really working cache and streaming system
 - [ ] Limit cache to a maximum size (LRU ? FIFO ?)
-- [ ] Pip package with Wheel dist (using GitHub actions ?)
+- [x] Pip package with Wheel dist (using GitHub actions ?)
 - [ ] List all albums with lazy loading (Check Qt possibilities)
 - [ ] Songs & Artists list (Tabs ?)
 - [ ] Sort lists (QTableWidgets ?)

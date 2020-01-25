@@ -26,8 +26,17 @@ from .data import Song, clone_song
 # FFmpeg log levels: {0:panic, 8:fatal, 16:error, 24:warning, 32:info, 40:verbose}
 musicplayer.setFfmpegLogLevel(20)
 
+
 class Player():
-    def __init__(self, outSamplerate = 48000):
+    """Player object.
+
+    Parameters
+    ----------
+    outSamplerate : int, optional
+        Sample rate used for the output, by default 48000
+    """
+
+    def __init__(self, outSamplerate=48000):
         self.core = musicplayer.createPlayer()
         self.core.outSamplerate = outSamplerate
         self.core.queue = self.get_songs()
@@ -38,6 +47,7 @@ class Player():
         self.events = defaultdict(list)
 
     def get_songs(self):
+        """Generator used to fetch the songs."""
         while True:
             yield self.songs[self.curr_song]
             self.curr_song += 1
@@ -45,37 +55,49 @@ class Player():
                 self.curr_song = 0
 
     def peek_songs(self, n):
+        """Lookahead the next n songs."""
         next_song = self.curr_song + 1
         if next_song >= len(self.songs):
             next_song = 0
         return map(clone_song, (self.songs[next_song:] + self.songs[:next_song])[:n])
 
     def cmd_play(self):
+        """Start playback."""
         self.core.playing = True
 
     def cmd_pause(self):
+        """Pause playback."""
         self.core.playing = False
 
-    def cmd_play_pause(self,*args):
+    # pylint: disable=unused-argument
+    def cmd_play_pause(self, *args):
+        """Toggles playback."""
         if not self.core.playing and len(self.songs) == 0:
             return False
         self.core.playing = not self.core.playing
+        return True
 
+    # pylint: disable=unused-argument
     def cmd_next(self, *args):
+        """Skip to next song."""
         self.core.nextSong()
 
     def get_metadata(self):
+        """Get the matadatas of the currently played song."""
         return pprint.pformat(self.core.curSongMetadata)
 
     def set_queue(self, songs: List[Song]):
+        """Replaces the queue with the given one."""
         self.songs = songs
         self.curr_song = -1
         self.core.nextSong()
 
     def add_to_queue(self, song: Song):
+        """Adds the given song to the queue."""
         self.songs += song
 
     def add_event_listener(self, event: str, func):
+        """Registers a new handler for a given event."""
         self.events[event].append(func)
 
     def _process_events(self, event: str, **kwargs):

@@ -19,22 +19,26 @@ import os
 
 from appdirs import *
 
-from .constants import CLIENT_VERSION, COMMAND_NAME
+from .constants import COMMAND_NAME
 
-def conf_file(conf_file, create=False):
+
+def conf_file(file_name, create=False):
+    """Returns the path to the requested conf file."""
     conf_dir = user_config_dir(COMMAND_NAME)
     if not os.path.isdir(conf_dir):
         os.makedirs(conf_dir)
-    conf_file = os.path.join(conf_dir, conf_file)
-    if create and not os.path.isfile(conf_file):
-        open(conf_file, 'w').close()
-    return conf_file
+    file_name = os.path.join(conf_dir, file_name)
+    if create and not os.path.isfile(file_name):
+        open(file_name, 'w').close()
+    return file_name
 
-def cache_file(cache_file, create=False):
+
+def cache_file(file_name, create=False):
+    """Returns the path to the requested cache file."""
     cache_dir = user_cache_dir(COMMAND_NAME)
     if not os.path.isdir(cache_dir):
         os.makedirs(cache_dir)
-    cache_file = os.path.join(cache_dir, cache_file)
-    if create and not os.path.isfile(cache_file):
-        open(cache_file, 'w').close()
-    return cache_file
+    file_name = os.path.join(cache_dir, file_name)
+    if create and not os.path.isfile(file_name):
+        open(file_name, 'w').close()
+    return file_name

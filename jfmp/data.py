@@ -22,7 +22,6 @@ from .file import cache_file
 
 
 class DualPositionBytesIO(BufferedIOBase):
-
     """
     Buffered I/O implementation using an in-memory bytes buffer.
 
@@ -31,6 +30,7 @@ class DualPositionBytesIO(BufferedIOBase):
     """
 
     def __init__(self, initial_bytes=None):
+        super().__init__()
         buf = bytearray()
         if initial_bytes is not None:
             buf.extend(initial_bytes)
@@ -39,20 +39,14 @@ class DualPositionBytesIO(BufferedIOBase):
         self._write_pos = 0
 
     def __getstate__(self):
-        if self.closed:
-            raise ValueError("__getstate__ on closed file")
         return self.__dict__.copy()
 
     def getvalue(self):
         """Return the bytes value (contents) of the buffer
         """
-        if self.closed:
-            raise ValueError("getvalue on closed file")
         return bytes(self._buffer)
 
     def read(self, n=None):
-        if self.closed:
-            raise ValueError("read from closed file")
         if n is None:
             n = -1
         if not isinstance(n, int):
@@ -63,9 +57,9 @@ class DualPositionBytesIO(BufferedIOBase):
         if len(self._buffer) <= self._pos:
             return b""
         newpos = min(len(self._buffer), self._pos + n)
-        b = self._buffer[self._pos : newpos]
+        buff = self._buffer[self._pos: newpos]
         self._pos = newpos
-        return bytes(b)
+        return bytes(buff)
 
     def read1(self, n):
         """This is the same as read.
@@ -73,8 +67,6 @@ class DualPositionBytesIO(BufferedIOBase):
         return self.read(n)
 
     def write(self, b):
-        if self.closed:
-            raise ValueError("write to closed file")
         if isinstance(b, str):
             raise TypeError("can't write unicode to binary stream")
         n = len(b)
@@ -91,8 +83,6 @@ class DualPositionBytesIO(BufferedIOBase):
         return n
 
     def seek(self, pos, whence=0):
-        if self.closed:
-            raise ValueError("seek on closed file")
         try:
             pos.__index__
         except AttributeError:
@@ -110,13 +100,9 @@ class DualPositionBytesIO(BufferedIOBase):
         return self._pos
 
     def tell(self):
-        if self.closed:
-            raise ValueError("tell on closed file")
         return self._pos
 
     def truncate(self, pos=None):
-        if self.closed:
-            raise ValueError("truncate on closed file")
         if pos is None:
             pos = self._pos
         else:
@@ -140,6 +126,14 @@ class DualPositionBytesIO(BufferedIOBase):
 
 
 class Song:
+    """Song object.
+
+    Parameters
+    ----------
+    raw : dict
+        Raw data from the api.
+    """
+
     def __init__(self, raw):
         self.raw = raw
         self.id = raw['Id']
@@ -156,12 +150,21 @@ class Song:
     #     return self.raw.get(name)
 
     def get_id(self):
+        """Returns the id."""
         return self.id
 
     def get_input(self):
+        """Returns the input of the buffer."""
         return self.buff
 
-    def read_from_cache(self):
+    def read_from_cache(self) -> bool:
+        """Try to load the file from cache.
+
+        Returns
+        -------
+        bool
+            False if it failed.
+        """
         if path.exists(self.url) and path.getsize(self.url) > 0:
             with open(self.url, 'rb') as f:
                 self.buff.write(f.read())
@@ -169,35 +172,49 @@ class Song:
         return False
 
     def write_to_cache(self):
+        """Write the content of the buffer to a cache file."""
         f = open(self.url, 'wb')
         f.write(self.buff.getvalue())
         f.close()
 
     def readPacket(self, bufSize):
+        """Read bytes from the buffer."""
         s = self.buff.read(bufSize)
         # print "readPacket", self, bufSize, len(s)
         return s
 
     def seekRaw(self, offset, whence):
-        r = self.buff.seek(offset, whence)
+        """Seek the buffer."""
+        self.buff.seek(offset, whence)
         # print "seekRaw", self, offset, whence, r, self.rstream.tell()
         return self.buff.tell()
 
     def clone(self):
+        """Returns a copy of the current song."""
         return Song(self.raw)
 
 
 class Album:
+    """Album object.
+
+    Parameters
+    ----------
+    raw : dict
+        Raw data from the api.
+    """
+
     def __init__(self, raw: dict):
         self.raw = raw
         self.id = raw['Id']
-    
+
     def __getattr__(self, name):
         return self.raw.get(name)
 
     def get_id(self):
+        """Returns the id."""
         return self.id
 
 
 def clone_song(song: Song) -> Song:
+    """Returns a copy of the given song."""
     return song.clone()

@@ -15,11 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import sys
-import os
-import fnmatch
-from pprint import pprint
-from functools import partial
 from time import sleep
 from typing import List
 
@@ -31,19 +26,29 @@ from .data import Song, Album
 from .client import Client
 from .player import Player
 
+
 def main():
+    """Main program."""
     app = App()
     app.run()
 
-class App(object):
+
+class App:
+    """App class
+
+    Main object that contains everything else.
+    """
+
     def __init__(self):
         # Create our Music Player.
         self.player = Player()
         # Create our Jellyfin Client.
         self.client = Client()
         self.threadpool = QThreadPool()
+        self.main = None
 
     def run(self):
+        """Runs the app"""
         # Qt GUI
         app = QApplication([])
         self.main = PlayerWindow(self)
@@ -61,6 +66,7 @@ class App(object):
         self.client.stop()
 
     def display_latest_albums(self):
+        """Fetches then displays latests albums inside the GUI."""
         def display_latest_albums():
             self.main.display_albums(self.client.get_latest_albums())
         if self.client.logged_in:
@@ -68,20 +74,39 @@ class App(object):
             self.threadpool.start(worker)
 
     def play_album(self, album: Album):
+        """Replaces the queue with the given album songs and start playing.
+
+        Parameters
+        ----------
+        album : Album
+            The album to start playing.
+        """
         songs = self.client.get_album_songs(album)
-        worker = Worker(lambda songs: [self.download_stream(s) for s in songs], songs)
+        worker = Worker(
+            lambda songs: [self.download_stream(s) for s in songs], songs)
         self.threadpool.start(worker)
-        sleep(2) # dirty sleep before I find a way to wait for the stream loading
+        sleep(2)  # dirty sleep before I find a way to wait for the stream loading
         self.player.set_queue(songs)
         self.player.cmd_play()
 
     def download_stream(self, song: Song):
+        """Fills the buffer of a given song."""
         if not song.read_from_cache():
             self.client.get_audio_stream(song)
             song.write_to_cache()
 
 
 class PlayerWindow(QMainWindow):
+    """Main playback window.
+
+    Parameters
+    ----------
+    app : App
+        The main app object.
+    parent : QtWidget, optional
+        The parent widget, by default None
+    """
+
     def __init__(self, app: App, parent=None):
         super(PlayerWindow, self).__init__(parent=parent)
         self.app = app
@@ -95,7 +120,7 @@ class PlayerWindow(QMainWindow):
         self.button_play.clicked.connect(app.player.cmd_play_pause)
         self.button_next.clicked.connect(app.player.cmd_next)
 
-        self.albums_list.doubleClicked.connect(self.play_album_songs)
+        self.albums_list.doubleClicked.connect(self.on_album_doubleclick)
         app.player.add_event_listener('song_change', self.on_song_change)
 
         layout = QVBoxLayout()
@@ -110,23 +135,37 @@ class PlayerWindow(QMainWindow):
         # Set dialog layout
         self.setCentralWidget(content)
 
+    # pylint: disable=unused-argument
     def on_song_change(self, newSong, **kwargs):
+        """Handler for song change event."""
         self.song_label.setText(newSong.Name)
         self.album_label.setText(newSong.Album)
         self.artist_label.setText(newSong.AlbumArtist)
 
     def display_albums(self, albums: List[Album]):
+        """Displays a list of albums."""
         for album in albums:
             item = QListWidgetItem(album.Name)
             item.setData(Qt.UserRole, album)
             self.albums_list.addItem(item)
 
-    def play_album_songs(self, item: QListWidgetItem):
+    def on_album_doubleclick(self, item: QListWidgetItem):
+        """Handler for double click event on album."""
         album = item.data(Qt.UserRole)
         self.app.play_album(album)
 
 
 class LoginDialog(QDialog):
+    """Login dialog.
+
+    Parameters
+    ----------
+    app : App
+        The main app object
+    parent : QtWidget, optional
+        The parent widget, by default None
+    """
+
     def __init__(self, app: App, parent=None):
         super(LoginDialog, self).__init__(parent)
         self.app = app
@@ -156,36 +195,40 @@ class LoginDialog(QDialog):
 
     @Slot()
     def login(self):
+        """Try to log in"""
         self.destroy()
-        if not self.app.client.log_in(self.host.text(),self.username.text(), self.password.text()):
+        if not self.app.client.log_in(self.host.text(), self.username.text(), self.password.text()):
             LoginDialog(self.app, self.parentWidget()).show()
         else:
             self.app.display_latest_albums()
 
+
 class Worker(QRunnable):
-    '''
-    Worker thread
+    """Worker thread
 
     Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
 
-    :param callback: The function callback to run on this worker thread. Supplied args and 
-                     kwargs will be passed through to the runner.
-    :type callback: function
-    :param args: Arguments to pass to the callback function
-    :param kwargs: Keywords to pass to the callback function
+    Parameters
+    ----------
+    func : function
+        The function callback to run on this worker thread.
+        Supplied args and kwargs will be passed through to the runner.
 
-    '''
+    args :
+        Arguments to pass to the callback function.
 
-    def __init__(self, fn, *args, **kwargs):
+    kwargs :
+        Keywords to pass to the callback function.
+    """
+
+    def __init__(self, func, *args, **kwargs):
         super(Worker, self).__init__()
         # Store constructor arguments (re-used for processing)
-        self.fn = fn
+        self.func = func
         self.args = args
         self.kwargs = kwargs
 
     @Slot()
     def run(self):
-        '''
-        Initialise the runner function with passed args, kwargs.
-        '''
-        self.fn(*self.args, **self.kwargs)
+        """Initialises the runner function with passed args, kwargs."""
+        self.func(*self.args, **self.kwargs)
