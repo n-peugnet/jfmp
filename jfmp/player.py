@@ -64,10 +64,12 @@ class Player():
     def cmd_play(self):
         """Start playback."""
         self.core.playing = True
+        self._process_events('playing_change', playing=True)
 
     def cmd_pause(self):
         """Pause playback."""
         self.core.playing = False
+        self._process_events('playing_change', playing=False)
 
     # pylint: disable=unused-argument
     def cmd_play_pause(self, *args):
@@ -75,6 +77,7 @@ class Player():
         if not self.core.playing and len(self.songs) == 0:
             return False
         self.core.playing = not self.core.playing
+        self._process_events('playing_change', playing=self.core.playing)
         return True
 
     # pylint: disable=unused-argument

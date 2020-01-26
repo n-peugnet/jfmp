@@ -2,7 +2,7 @@
 
 AKA jfmp, a minimalist cross-platform gapless music player for Jellyfin.
 
-![screenshot 1](docs/screenshot_02.png)
+![screenshot 1](docs/screenshot_03.png)
 
 ## Install from sources
 
@@ -46,11 +46,13 @@ _Note: if you want to use your system theme you will have to symlink your virtua
 - [x] Really working cache and streaming system
 - [ ] Limit cache to a maximum size (LRU ? FIFO ?)
 - [x] Pip package with Wheel dist (using GitHub actions ?)
+- [ ] Double click in Queue sets the current playing song
 - [ ] List all albums with lazy loading (Check Qt possibilities)
 - [ ] Songs & Artists list (Tabs ?)
 - [ ] Sort lists (QTableWidgets ?)
 - [ ] Quick jump in list (with keyboard keys)
 - [ ] Search functionality
+- [ ] Playback bar with seek functionality
 - [ ] Queue managment (Reorder, Play next, Add to Queue...)
 - [ ] Remote Jellyfin control
 - [ ] Desktop integration (using DBUS ? Needs research)

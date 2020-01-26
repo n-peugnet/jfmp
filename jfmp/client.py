@@ -109,7 +109,7 @@ class Client(JellyfinClient):
     # @ensure_logged_in()
     def get_latest_albums(self) -> List[Album]:
         """Fetches latests albums from the api."""
-        return [Album(a) for a in self.jellyfin.get_recently_added('Audio')]
+        return [Album(a) for a in self.jellyfin.get_recently_added('Audio', limit=100)]
 
     def get_album_songs(self, album: Album) -> List[Song]:
         """Fetches a given album's songs from the api."""

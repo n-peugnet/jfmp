@@ -42,7 +42,7 @@ class App:
 
     def __init__(self):
         # Create our Music Player.
-        self.player = Player()
+        self.player = Player(96000)
         # Create our Jellyfin Client.
         self.client = Client()
         self.threadpool = QThreadPool()
@@ -123,23 +123,30 @@ class PlayerWindow(QMainWindow):
         self.song_label = QLabel('None')
         self.album_label = QLabel('None')
         self.artist_label = QLabel('None')
-        self.button_play = QPushButton('Play/Pause')
-        self.button_next = QPushButton('Next')
+        self.button_play = QPushButton()
+        self.button_play.setIcon(QIcon.fromTheme('media-playback-start'))
         self.button_play.clicked.connect(app.player.cmd_play_pause)
+        self.button_next = QPushButton()
+        self.button_next.setIcon(QIcon.fromTheme('media-skip-forward'))
         self.button_next.clicked.connect(app.player.cmd_next)
 
         self.albums_list.doubleClicked.connect(self.on_album_doubleclick)
         app.player.add_event_listener('song_change', self.on_song_change)
+        app.player.add_event_listener('playing_change', self.on_playing_change)
 
+        buttons = QWidget()
+        buttons_layout = QHBoxLayout()
         layout = QVBoxLayout()
         layout.addWidget(self.list_tabs)
         layout.addWidget(self.song_label)
         layout.addWidget(self.album_label)
         layout.addWidget(self.artist_label)
-        layout.addWidget(self.button_play)
-        layout.addWidget(self.button_next)
+        layout.addWidget(buttons)
+        buttons_layout.addWidget(self.button_play)
+        buttons_layout.addWidget(self.button_next)
         content = QWidget()
         content.setLayout(layout)
+        buttons.setLayout(buttons_layout)
         # Set dialog layout
         self.setCentralWidget(content)
 
@@ -174,6 +181,13 @@ class PlayerWindow(QMainWindow):
             self.queue_list.addItem(item)
         self.list_tabs.setCurrentWidget(self.queue_list)
         self.app.play_songs(songs)
+
+    def on_playing_change(self, playing: bool):
+        """Handler for playing change event."""
+        if playing:
+            self.button_play.setIcon(QIcon.fromTheme('media-playback-pause'))
+        else:
+            self.button_play.setIcon(QIcon.fromTheme('media-playback-start'))
 
 
 class LoginDialog(QDialog):
