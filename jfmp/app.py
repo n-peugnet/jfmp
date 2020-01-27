@@ -114,50 +114,56 @@ class PlayerWindow(QMainWindow):
         self.setWindowTitle(CLIENT_NAME)
 
         self.albums_list = QListWidget()
+        self.albums_list.setFrameStyle(QFrame.NoFrame)
         self.queue_list = QListWidget()
-        self.albums_list.setStyleSheet(
-            "QListView::item { height: 17px; width: 100%}")
-        self.queue_list.setStyleSheet(
-            "QListView::item { height: 17px; width: 100%}")
+        self.queue_list.setFrameStyle(QFrame.NoFrame)
         self.list_tabs = QTabWidget()
         self.list_tabs.addTab(self.albums_list, 'Albums')
         self.list_tabs.addTab(self.queue_list, 'Queue')
-        self.song_label = QLabel('None')
-        self.album_label = QLabel('None')
-        self.artist_label = QLabel('None')
+        self.list_tabs.setSizePolicy(
+            QSizePolicy.Ignored,
+            QSizePolicy.MinimumExpanding)
+        self.list_tabs.setStyleSheet(
+            "QListView::item { height: 17px; width: 100%}")
+        self.song_label = QLabel()
+        self.song_label.setSizePolicy(
+            QSizePolicy.Ignored,
+            QSizePolicy.Ignored)
+        self.song_label.setFrameShape(QFrame.StyledPanel)
         self.button_play = QPushButton()
         self.button_play.setIcon(QIcon.fromTheme('media-playback-start'))
+        self.button_play.setMaximumWidth(30)
         self.button_play.clicked.connect(app.player.cmd_play_pause)
         self.button_next = QPushButton()
         self.button_next.setIcon(QIcon.fromTheme('media-skip-forward'))
+        self.button_next.setMaximumWidth(30)
         self.button_next.clicked.connect(app.player.cmd_next)
 
         self.albums_list.doubleClicked.connect(self.on_album_doubleclick)
         app.player.add_event_listener('song_change', self.on_song_change)
         app.player.add_event_listener('playing_change', self.on_playing_change)
 
-        buttons = QWidget()
-        buttons_layout = QHBoxLayout()
+        controls = QWidget()
+        controls_layout = QHBoxLayout()
         layout = QVBoxLayout()
         layout.addWidget(self.list_tabs)
-        layout.addWidget(self.song_label)
-        layout.addWidget(self.album_label)
-        layout.addWidget(self.artist_label)
-        layout.addWidget(buttons)
-        buttons_layout.addWidget(self.button_play)
-        buttons_layout.addWidget(self.button_next)
+        layout.addWidget(controls)
+        controls_layout.addWidget(self.button_play)
+        controls_layout.addWidget(self.button_next)
+        controls_layout.addWidget(self.song_label)
+        controls_layout.setContentsMargins(0, 0, 0, 0)
         content = QWidget()
         content.setLayout(layout)
-        buttons.setLayout(buttons_layout)
+        controls.setLayout(controls_layout)
         # Set dialog layout
         self.setCentralWidget(content)
 
     # pylint: disable=unused-argument
     def on_song_change(self, oldSong: Song, newSong: Song, **kwargs):
         """Handler for song change event."""
-        self.song_label.setText(newSong.Name)
-        self.album_label.setText(newSong.Album)
-        self.artist_label.setText(newSong.AlbumArtist)
+        label = f'{newSong.Name} - {newSong.Album} - {newSong.AlbumArtist}'
+        self.song_label.setText(label)
+        self.song_label.setToolTip(label)
         if oldSong is not None and oldSong.item is not None:
             oldSong.item.setIcon(QIcon())
         newSong.item.setIcon(QIcon.fromTheme('media-playback-start'))
