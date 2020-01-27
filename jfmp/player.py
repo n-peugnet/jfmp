@@ -95,11 +95,18 @@ class Player():
         """Get the matadatas of the currently played song."""
         return pprint.pformat(self.core.curSongMetadata)
 
-    def set_queue(self, songs: List[Song]):
+    def play_new_queue(self, songs: List[Song]):
         """Replaces the queue with the given one."""
         self.songs = songs
         self.curr_song = -1
-        self.core.nextSong()
+        self.cmd_play()
+        self.cmd_next()
+
+    def play_queue_song(self, i: int):
+        """Play the song number 'i' of the queue."""
+        self.curr_song = i - 1
+        self.cmd_play()
+        self.cmd_next()
 
     def add_to_queue(self, song: Song):
         """Adds the given song to the queue."""

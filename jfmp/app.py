@@ -86,8 +86,7 @@ class App:
             lambda songs: [self.download_stream(s) for s in songs], songs)
         self.threadpool.start(worker)
         sleep(2)  # dirty sleep before I find a way to wait for the stream load
-        self.player.set_queue(songs)
-        self.player.cmd_play()
+        self.player.play_new_queue(songs)
         return songs
 
     def download_stream(self, song: Song):
@@ -140,6 +139,7 @@ class PlayerWindow(QMainWindow):
         self.button_next.clicked.connect(app.player.cmd_next)
 
         self.albums_list.doubleClicked.connect(self.on_album_doubleclick)
+        self.queue_list.doubleClicked.connect(self.on_queue_doubleclick)
         app.player.add_event_listener('song_change', self.on_song_change)
         app.player.add_event_listener('playing_change', self.on_playing_change)
 
@@ -189,6 +189,10 @@ class PlayerWindow(QMainWindow):
             self.queue_list.addItem(item)
         self.list_tabs.setCurrentWidget(self.queue_list)
         self.app.play_songs(songs)
+
+    def on_queue_doubleclick(self, item: QListWidgetItem):
+        """Handler for double click event on album."""
+        self.app.player.play_queue_song(item.row())
 
     def on_playing_change(self, playing: bool):
         """Handler for playing change event."""
