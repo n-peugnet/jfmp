@@ -161,7 +161,7 @@ class PlayerWindow(QMainWindow):
     # pylint: disable=unused-argument
     def on_song_change(self, oldSong: Song, newSong: Song, **kwargs):
         """Handler for song change event."""
-        label = f'{newSong.Name} - {newSong.Album} - {newSong.AlbumArtist}'
+        label = f'{newSong.name} - {newSong.album} - {newSong.artist}'
         self.song_label.setText(label)
         self.song_label.setToolTip(label)
         if oldSong is not None and oldSong.item is not None:
@@ -171,7 +171,7 @@ class PlayerWindow(QMainWindow):
     def display_albums(self, albums: List[Album]):
         """Displays a list of albums."""
         for album in albums:
-            item = QListWidgetItem(album.Name)
+            item = QListWidgetItem(album.name)
             item.setData(Qt.UserRole, album)
             self.albums_list.addItem(item)
 
@@ -183,7 +183,7 @@ class PlayerWindow(QMainWindow):
             self.queue_list.item(i).data(Qt.UserRole).item = None
         self.queue_list.clear()
         for song in songs:
-            item = QListWidgetItem(song.Name)
+            item = QListWidgetItem(song.name)
             item.setData(Qt.UserRole, song)
             song.item = item
             self.queue_list.addItem(item)

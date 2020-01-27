@@ -135,20 +135,16 @@ class Song:
     """
 
     def __init__(self, raw):
-        self.raw = raw
         self.id = raw['Id']
-        self.Name = raw['Name']
-        self.Album = raw['Album']
-        self.AlbumArtist = raw['AlbumArtist']
+        self.name = raw['Name']
+        self.album = raw['Album']
+        self.artist = raw['AlbumArtist']
         self.buff = DualPositionBytesIO()
-        self.url = cache_file(f'{self.get_id()} - {self.Name}')
+        self.url = cache_file(f'{self.get_id()} - {self.name}')
         self.item = None
 
     def __eq__(self, other):
         return self.id == other.id
-
-    # def __getattr__(self, name):
-    #     return self.raw.get(name)
 
     def get_id(self):
         """Returns the id."""
@@ -201,11 +197,8 @@ class Album:
     """
 
     def __init__(self, raw: dict):
-        self.raw = raw
         self.id = raw['Id']
-
-    def __getattr__(self, name):
-        return self.raw.get(name)
+        self.name = raw['Name']
 
     def get_id(self):
         """Returns the id."""
