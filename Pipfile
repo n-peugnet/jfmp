@@ -5,11 +5,12 @@ verify_ssl = true
 
 [dev-packages]
 autopep8 = "*"
-pylint = "*"
+flake8 = "*"
+flake8-copyright = "*"
 
 [packages]
 jellyfin-apiclient-python = {git = "https://github.com/iwalton3/jellyfin-apiclient-python",editable = true}
-musicplayer = {git = "https://github.com/n-peugnet/music-player-core.git",ref = "test-branch"}
+musicplayer = {git = "https://github.com/albertz/music-player-core.git",editable = true}
 appdirs = "==1.*"
 pyside2 = "==5.*"
 

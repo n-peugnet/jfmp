@@ -1,3 +1,4 @@
+from os import system
 from setuptools import setup
 
 with open("README.md", "r") as fh:
@@ -5,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="jfmp",
-    version="0.1.0b1",
+    version=system("git --no-pager describe --always --tags"),
     author="Nicolas Peugnet",
     author_email="n.peugnet@free.fr",
     description="A minimalist cross-platform gapless music player for Jellyfin",

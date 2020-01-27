@@ -85,7 +85,7 @@ class App:
         worker = Worker(
             lambda songs: [self.download_stream(s) for s in songs], songs)
         self.threadpool.start(worker)
-        sleep(2)  # dirty sleep before I find a way to wait for the stream loading
+        sleep(2)  # dirty sleep before I find a way to wait for the stream load
         self.player.set_queue(songs)
         self.player.cmd_play()
         return songs
@@ -115,8 +115,10 @@ class PlayerWindow(QMainWindow):
 
         self.albums_list = QListWidget()
         self.queue_list = QListWidget()
-        self.albums_list.setStyleSheet("QListView::item { height: 17px; width: 100%}")
-        self.queue_list.setStyleSheet("QListView::item { height: 17px; width: 100%}")
+        self.albums_list.setStyleSheet(
+            "QListView::item { height: 17px; width: 100%}")
+        self.queue_list.setStyleSheet(
+            "QListView::item { height: 17px; width: 100%}")
         self.list_tabs = QTabWidget()
         self.list_tabs.addTab(self.albums_list, 'Albums')
         self.list_tabs.addTab(self.queue_list, 'Queue')
@@ -232,7 +234,11 @@ class LoginDialog(QDialog):
     def login(self):
         """Try to log in"""
         self.destroy()
-        if not self.app.client.log_in(self.host.text(), self.username.text(), self.password.text()):
+        if not self.app.client.log_in(
+            self.host.text(),
+            self.username.text(),
+            self.password.text()
+        ):
             LoginDialog(self.app, self.parentWidget()).show()
         else:
             self.app.display_latest_albums()

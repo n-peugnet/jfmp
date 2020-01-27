@@ -23,7 +23,13 @@ import musicplayer
 
 from .data import Song
 
-# FFmpeg log levels: {0:panic, 8:fatal, 16:error, 24:warning, 32:info, 40:verbose}
+# FFmpeg log levels:
+#   0:panic
+#   8:fatal
+#   16:error
+#   24:warning
+#   32:info
+#   40:verbose
 musicplayer.setFfmpegLogLevel(20)
 
 
