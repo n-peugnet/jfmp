@@ -150,6 +150,16 @@ class PlayerWindow(QMainWindow):
         # Set dialog layout
         self.setCentralWidget(content)
 
+        # Add Shortcuts
+        QShortcut(
+            QKeySequence(Qt.Key_Space),
+            content,
+            app.player.cmd_play_pause)
+        QShortcut(
+            QKeySequence(Qt.Key_Right),
+            content,
+            app.player.cmd_next)
+
     # pylint: disable=unused-argument
     def on_song_change(self, oldSong: Song, newSong: Song, **kwargs):
         """Handler for song change event."""
