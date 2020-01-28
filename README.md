@@ -4,6 +4,34 @@ AKA jfmp, a minimalist cross-platform gapless music player for Jellyfin.
 
 ![screenshot 1](docs/screenshot_04.png)
 
+## Features/ToDo
+
+- [x] Gapless playback
+- [x] In-memory streaming + cache
+- [ ] Limit cache to a maximum size (LRU ? FIFO ?)
+- [ ] Lists
+  - [ ] List all with lazy loading (Check Qt possibilities)
+  - [ ] Songs
+  - [ ] Artists
+  - [ ] Sort lists (QTableWidgets ?)
+  - [ ] Filter (by Artist, Album, Genre)
+- [ ] Keyboard controls
+  - [ ] <kbd>A-Z</kbd> : Quick jump in sorted list
+  - [ ] <kbd>Spacebar</kbd> : play/pause
+  - [ ] <kbd>🠆</kbd> : next
+  - [ ] <kbd>Enter</kbd> : Play selected
+- [ ] Search functionality
+- [ ] Playback bar with seek functionality
+- [ ] Queue managment
+  - [ ] Reorder queue
+  - [ ] Play next
+  - [ ] Add to Queue
+- [ ] Remote Jellyfin control
+- [ ] Desktop integration (using DBUS ? Needs research)
+- [ ] Packaging
+  - [ ] Debian
+  - [ ] Pip with Wheel dist
+
 ## Install from sources
 
 ### Requirements
@@ -38,22 +66,5 @@ _Note: if you want to use your system theme you will have to symlink your virtua
 
 ## Built With
 
--   [music-player-core](https://github.com/albertz/music-player-core)
--   [jellyfin-apiclient-python](https://github.com/iwalton3/jellyfin-apiclient-python)
-
-## To Do
-
-- [x] Really working cache and streaming system
-- [ ] Limit cache to a maximum size (LRU ? FIFO ?)
-- [x] Pip package with Wheel dist (using GitHub actions ?)
-- [x] Double click in Queue sets the current playing song
-- [ ] List all albums with lazy loading (Check Qt possibilities)
-- [ ] Songs & Artists list (Tabs ?)
-- [ ] Sort lists (QTableWidgets ?)
-- [ ] Quick jump in list (with keyboard keys)
-- [ ] Search functionality
-- [ ] Playback bar with seek functionality
-- [ ] Queue managment (Reorder, Play next, Add to Queue...)
-- [ ] Remote Jellyfin control
-- [ ] Desktop integration (using DBUS ? Needs research)
-- [ ] Packaging (APT first)
+-   [albertz/music-player-core](https://github.com/albertz/music-player-core)
+-   [iwalton3/jellyfin-apiclient-python](https://github.com/iwalton3/jellyfin-apiclient-python)
