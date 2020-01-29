@@ -4,5 +4,9 @@ build/
 dist/
 jfmp.egg-info/
 
+# pbr generated
+AUTHORS
+ChangeLog
+
 # IDEs
 .vscode/
