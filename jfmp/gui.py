@@ -26,6 +26,21 @@ from .data import Song, Album
 from .interfaces import AppInterface
 
 
+class SearchBar(QLineEdit):
+    def __init__(self, search_func, text='', parent=None):
+        super().__init__(text, parent=parent)
+        self.search_func = search_func
+        self.textChanged.connect(self.on_text_changed)
+        self.setClearButtonEnabled(True)
+        self.setPlaceholderText("Search...")
+        self.addAction(
+            QIcon.fromTheme('search-icon'),
+            QLineEdit.LeadingPosition)
+
+    def on_text_changed(self, text):
+        self.search_func(text)
+
+
 class QueueQListWidget(QListWidget):
     def __init__(self, app: AppInterface, tabs: QTabWidget, parent=None):
         super().__init__(parent=parent)
@@ -101,6 +116,7 @@ class PlayerWindow(QMainWindow):
         self.app = app
         self.setWindowTitle(CLIENT_NAME)
 
+        self.search_bar = SearchBar(app.search)
         self.list_tabs = QTabWidget()
         self.queue_list = QueueQListWidget(app, self.list_tabs)
         self.queue_list.setFrameStyle(QFrame.NoFrame)
@@ -138,6 +154,7 @@ class PlayerWindow(QMainWindow):
         controls = QWidget()
         controls_layout = QHBoxLayout()
         layout = QVBoxLayout()
+        layout.addWidget(self.search_bar)
         layout.addWidget(self.list_tabs)
         layout.addWidget(controls)
         controls_layout.addWidget(self.button_play)
@@ -172,6 +189,7 @@ class PlayerWindow(QMainWindow):
 
     def display_albums(self, albums: List[Album]):
         """Displays a list of albums."""
+        self.albums_list.clear()
         self.albums_list.addAlbums(albums)
 
     def on_playing_change(self, playing: bool):

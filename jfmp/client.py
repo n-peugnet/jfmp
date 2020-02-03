@@ -130,3 +130,7 @@ class Client(JellyfinClient):
             song.get_id(),
             'test',
             'opus,mp3|mp3,aac,m4a|aac,flac,webma,webm,wav')
+
+    def search_albums(self, text):
+        response = self.jellyfin.search_media_items(text, media='MusicAlbum')
+        return [Album(a) for a in response['Items']]

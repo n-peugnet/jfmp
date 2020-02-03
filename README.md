@@ -21,8 +21,8 @@ AKA jfmp, a minimalist cross-platform gapless music player for Jellyfin.
   - [x] <kbd>🠆</kbd> : Next
   - [x] <kbd>Enter</kbd> : Play selected
   - [x] <kbd>Ctrl</kbd>+<kbd>Tab</kbd> : Change tab
-- [ ] Search functionality
-- [ ] Playback bar with seek functionality
+- [x] Search feature
+- [ ] Playback bar with seek feature
 - [ ] Queue managment
   - [ ] Reorder queue
   - [ ] Play next

@@ -92,6 +92,13 @@ class App(AppInterface):
             self.client.get_audio_stream(song)
             song.write_to_cache()
 
+    def search(self, term):
+        if (len(term) == 0):
+            return
+        worker = Worker(
+            lambda: self.main.display_albums(self.client.search_albums(term)))
+        self._threadpool.start(worker)
+
 
 class Worker(QRunnable):
     """Worker thread
