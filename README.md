@@ -2,7 +2,7 @@
 
 AKA jfmp, a minimalist cross-platform gapless music player for Jellyfin.
 
-![screenshot 1](docs/screenshot_04.png)
+![screenshot 5](docs/screenshot_05.png)
 
 ## Features/ToDo
 
