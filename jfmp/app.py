@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from time import sleep
 from typing import List
 
 from PySide2.QtWidgets import QApplication
@@ -30,7 +29,7 @@ from .gui import PlayerWindow, LoginDialog
 
 def main():
     """Main program."""
-    app = App(Player(96000), Client())
+    app = App()
     app.run()
 
 
@@ -40,8 +39,10 @@ class App(AppInterface):
     Main object that contains everything else.
     """
 
-    def __init__(self, player: Player, client: Client):
-        super().__init__(player, client)
+    def __init__(self):
+        super().__init__()
+        self.player = Player(self, 96000)
+        self.client = Client(self)
         self._threadpool = QThreadPool()
         self.main = None
 
@@ -72,17 +73,13 @@ class App(AppInterface):
             self._threadpool.start(worker)
 
     def play_songs(self, songs: List[Song]):
-        """Replaces the queue with the given album songs and start playing.
+        """Replaces the queue with the given list of songs and start playing.
 
         Parameters
         ----------
-        album : Album
-            The album to start playing.
+        songs : List[Song]
+            The list of songs to start playing.
         """
-        worker = Worker(
-            lambda songs: [self.download_stream(s) for s in songs], songs)
-        self._threadpool.start(worker)
-        sleep(2)  # dirty sleep before I find a way to wait for the stream load
         self.player.play_new_queue(songs)
         return songs
 

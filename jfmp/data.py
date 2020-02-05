@@ -17,8 +17,26 @@
 
 from os import path
 from io import BufferedIOBase
+from threading import Lock, Condition
 
 from .file import cache_file
+
+
+class Semaphore:
+    def __init__(self, init=0):
+        super().__init__()
+        self._cv = Condition(Lock())
+        self._counter = init
+
+    def acquire(self, val=1):
+        with self._cv:
+            self._cv.wait_for(lambda: self._counter >= val)
+            self._counter -= val
+
+    def release(self, val=1):
+        with self._cv:
+            self._counter += val
+            self._cv.notify_all()
 
 
 class DualPositionBytesIO(BufferedIOBase):
@@ -37,6 +55,7 @@ class DualPositionBytesIO(BufferedIOBase):
         self._buffer = buf
         self._pos = 0
         self._write_pos = 0
+        self._sem = Semaphore()
 
     def __getstate__(self):
         return self.__dict__.copy()
@@ -57,14 +76,10 @@ class DualPositionBytesIO(BufferedIOBase):
         if len(self._buffer) <= self._pos:
             return b""
         newpos = min(len(self._buffer), self._pos + n)
+        self._sem.acquire(newpos - self._pos)
         buff = self._buffer[self._pos: newpos]
         self._pos = newpos
         return bytes(buff)
-
-    def read1(self, n):
-        """This is the same as read.
-        """
-        return self.read(n)
 
     def write(self, b):
         if isinstance(b, str):
@@ -80,6 +95,7 @@ class DualPositionBytesIO(BufferedIOBase):
             self._buffer += padding
         self._buffer[pos:pos + n] = b
         self._write_pos += n
+        self._sem.release(n)
         return n
 
     def seek(self, pos, whence=0):
@@ -90,30 +106,23 @@ class DualPositionBytesIO(BufferedIOBase):
         if whence == 0:
             if pos < 0:
                 raise ValueError("negative seek position %r" % (pos,))
-            self._pos = pos
+            newpos = pos
         elif whence == 1:
-            self._pos = max(0, self._pos + pos)
+            newpos = max(0, self._pos + pos)
         elif whence == 2:
-            self._pos = max(0, len(self._buffer) + pos)
+            newpos = max(0, len(self._buffer) + pos)
         else:
             raise ValueError("invalid whence value")
+        move = newpos - self._pos
+        if move > 0:
+            self._sem.acquire(move)
+        elif move < 0:
+            self._sem.release(-move)
+        self._pos = newpos
         return self._pos
 
     def tell(self):
         return self._pos
-
-    def truncate(self, pos=None):
-        if pos is None:
-            pos = self._pos
-        else:
-            try:
-                pos.__index__
-            except AttributeError:
-                raise TypeError("an integer is required")
-            if pos < 0:
-                raise ValueError("negative truncate position %r" % (pos,))
-        del self._buffer[pos:]
-        return pos
 
     def readable(self):
         return True
@@ -125,6 +134,18 @@ class DualPositionBytesIO(BufferedIOBase):
         return True
 
 
+def ensure_buffered():
+    def decorator(func):
+        def wrapper(self, *args, **kwargs):
+            if self.buff is None:
+                self.buff = DualPositionBytesIO()
+                self.app.download_stream(self)
+            return func(self, *args, **kwargs)
+        return wrapper
+
+    return decorator
+
+
 class Song:
     """Song object.
 
@@ -134,12 +155,13 @@ class Song:
         Raw data from the api.
     """
 
-    def __init__(self, raw):
+    def __init__(self, raw, app):
+        self.app = app
         self.id = raw['Id']
         self.name = raw['Name']
         self.album = raw['Album']
         self.artist = raw['AlbumArtist']
-        self.buff = DualPositionBytesIO()
+        self.buff = None
         self.url = cache_file(f'{self.get_id()} - {self.name}')
         self.item = None
 
@@ -150,6 +172,7 @@ class Song:
         """Returns the id."""
         return self.id
 
+    @ensure_buffered()
     def get_input(self):
         """Returns the input of the buffer."""
         return self.buff
@@ -168,18 +191,21 @@ class Song:
                 return True
         return False
 
+    @ensure_buffered()
     def write_to_cache(self):
         """Write the content of the buffer to a cache file."""
         f = open(self.url, 'wb')
         f.write(self.buff.getvalue())
         f.close()
 
+    @ensure_buffered()
     def readPacket(self, bufSize):
         """Read bytes from the buffer."""
         s = self.buff.read(bufSize)
         # print "readPacket", self, bufSize, len(s)
         return s
 
+    @ensure_buffered()
     def seekRaw(self, offset, whence):
         """Seek the buffer."""
         self.buff.seek(offset, whence)

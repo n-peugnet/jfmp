@@ -45,8 +45,9 @@ def ensure_logged_in():
 class Client(JellyfinClient):
     """JellyfinClient extension with higher level calls."""
 
-    def __init__(self):
+    def __init__(self, app):
         super().__init__()
+        self.app = app
         self.config.data['app.default'] = True
         self.config.app(
             CLIENT_NAME,
@@ -121,7 +122,7 @@ class Client(JellyfinClient):
             'IncludeItemTypes': 'Audio',
             'SortBy': 'SortName',
         })
-        return [Song(i) for i in response['Items']]
+        return [Song(i, self.app) for i in response['Items']]
 
     def get_audio_stream(self, song: Song):
         """Downloads the audio stream for a file."""

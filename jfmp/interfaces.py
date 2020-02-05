@@ -26,9 +26,9 @@ from .player import Player
 class AppInterface(ABC):
     """Interface that the App class must implement."""
 
-    def __init__(self, player: Player, client: Client):
-        self.player = player
-        self.client = client
+    def __init__(self):
+        self.player: Player
+        self.client: Client
 
     @abstractmethod
     def play_songs(self, songs: List[Song]):

@@ -42,7 +42,8 @@ class Player():
         Sample rate used for the output, by default 48000
     """
 
-    def __init__(self, outSamplerate=48000):
+    def __init__(self, app, outSamplerate=48000):
+        self.app = app
         self.core = musicplayer.createPlayer()
         self.core.outSamplerate = outSamplerate
         self.core.queue = self.get_songs()
