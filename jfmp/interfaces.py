@@ -33,3 +33,7 @@ class AppInterface(ABC):
     @abstractmethod
     def play_songs(self, songs: List[Song]):
         pass
+
+    @abstractmethod
+    def add_to_queue(self, songs: List[Song]):
+        pass

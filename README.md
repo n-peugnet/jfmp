@@ -12,7 +12,9 @@ AKA jfmp, a minimalist cross-platform gapless music player for Jellyfin.
 - [ ] Lists
   - [ ] List all with lazy loading (Check Qt possibilities)
   - [ ] Songs
+  - [x] Albums
   - [ ] Artists
+  - [ ] Playlists
   - [ ] Sort lists (QTableWidgets ?)
   - [ ] Filter (by Artist, Album, Genre)
 - [ ] Keyboard controls
@@ -26,7 +28,9 @@ AKA jfmp, a minimalist cross-platform gapless music player for Jellyfin.
 - [ ] Queue managment
   - [ ] Reorder queue
   - [ ] Play next
-  - [ ] Add to Queue
+  - [x] Add to Queue
+  - [ ] Shuffle Queue toggle
+  - [ ] Loop Queue toggle
 - [ ] Remote Jellyfin control
 - [ ] Desktop integration (using DBUS ? Needs research)
 - [ ] Packaging

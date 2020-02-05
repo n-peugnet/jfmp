@@ -17,7 +17,7 @@
 
 from typing import List
 
-from PySide2.QtCore import Qt, Slot
+from PySide2.QtCore import Qt, Slot, QAbstractListModel, QPoint
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
@@ -58,6 +58,13 @@ class QueueQListWidget(QListWidget):
         """Handler for double click event on album."""
         self.app.player.play_queue_song(item.row())
 
+    def add_songs(self, songs: List[Song]):
+        """Displays a list of albums."""
+        for song in songs:
+            item = QListWidgetItem(song.name)
+            item.setData(Qt.UserRole, song)
+            song.item = item
+            self.addItem(item)
 
 class AlbumQListWidget(QListWidget):
     def __init__(self,
@@ -71,19 +78,23 @@ class AlbumQListWidget(QListWidget):
         self.queue = queue
         self.doubleClicked.connect(self.on_doubleclick)
 
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.context_menu)
+
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key.Key_Enter or event.key() == Qt.Key_Return:
             self.on_doubleclick(self.selectedItems()[0])
         else:
             super().keyPressEvent(event)
 
-    def addAlbums(self, albums: List[Album]):
+    def add_albums(self, albums: List[Album]):
         """Displays a list of albums."""
         for album in albums:
             item = QListWidgetItem(album.name)
             item.setData(Qt.UserRole, album)
             self.addItem(item)
 
+    @Slot()
     def on_doubleclick(self, item: QListWidgetItem):
         """Handler for double click event on album."""
         album = item.data(Qt.UserRole)
@@ -91,13 +102,23 @@ class AlbumQListWidget(QListWidget):
         for i in range(self.queue.count()):
             self.queue.item(i).data(Qt.UserRole).item = None
         self.queue.clear()
-        for song in songs:
-            item = QListWidgetItem(song.name)
-            item.setData(Qt.UserRole, song)
-            song.item = item
-            self.queue.addItem(item)
+        self.queue.add_songs(songs)
         self.tabs.setCurrentWidget(self.queue)
         self.app.play_songs(songs)
+
+    def a_add_to_queue(self, album_item: QListWidgetItem):
+        album = album_item.data(Qt.UserRole)
+        songs = self.app.client.get_album_songs(album)
+        self.app.add_to_queue(songs)
+
+    @Slot()
+    def context_menu(self, pos: QPoint):
+        item = self.itemAt(pos)
+        a_add_to_queue = QAction("Add to Queue", self)
+        a_add_to_queue.triggered.connect(lambda: self.a_add_to_queue(item))
+        menu = QMenu(self)
+        menu.addAction(a_add_to_queue)
+        menu.popup(self.viewport().mapToGlobal(pos))
 
 
 class PlayerWindow(QMainWindow):
@@ -190,7 +211,10 @@ class PlayerWindow(QMainWindow):
     def display_albums(self, albums: List[Album]):
         """Displays a list of albums."""
         self.albums_list.clear()
-        self.albums_list.addAlbums(albums)
+        self.albums_list.add_albums(albums)
+
+    def add_to_queue(self, songs: List[Song]):
+        self.queue_list.add_songs(songs)
 
     def on_playing_change(self, playing: bool):
         """Handler for playing change event."""

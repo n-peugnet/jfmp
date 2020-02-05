@@ -83,6 +83,10 @@ class App(AppInterface):
         self.player.play_new_queue(songs)
         return songs
 
+    def add_to_queue(self, songs: List[Song]):
+        self.player.add_to_queue(songs)
+        self.main.add_to_queue(songs)
+
     def download_stream(self, song: Song):
         """Fills the buffer of a given song."""
         if not song.read_from_cache():
